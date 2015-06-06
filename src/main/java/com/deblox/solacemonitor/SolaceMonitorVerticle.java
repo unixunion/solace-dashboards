@@ -1,0 +1,160 @@
+package com.deblox.solacemonitor;
+
+
+import com.deblox.Util;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.Future;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.impl.LoggerFactory;
+
+import java.util.*;
+
+/*
+ * Solace Monitor Dashboard Verticle
+ *
+ * reads a config and creates periodic metric monitors
+ * answer specific monitor requests on the eventbus for "on-demand"
+ *
+ */
+
+public class SolaceMonitorVerticle extends AbstractVerticle {
+
+  private static final Logger logger = LoggerFactory.getLogger(SolaceMonitorVerticle.class);
+  EventBus eb;
+  String uuid;
+  HttpClient client;
+  JsonObject config;
+
+  String host;
+  String username;
+  String password;
+  String credentials;
+
+  public void start(Future<Void> startFuture) throws Exception {
+
+    logger.info("starup with config: " + config().toString());
+
+    config = config();
+    host = config().getString("host", null);
+    username = config().getString("username" ,"DEFAULT_USERNAME");
+    password = config().getString("password" ,"DEFAULT_PASSWORD");
+    credentials = String.format("%s:%s", username, password);
+
+    uuid = UUID.randomUUID().toString();
+    eb = vertx.eventBus();
+    client = vertx.createHttpClient();
+
+    // eventbus request ping listner
+    eb.consumer("ping-address", message -> {
+      logger.info(uuid + ": replying");
+      message.reply("pong!");
+    });
+
+    // eventbus request for metrics listener
+    eb.consumer("request-metrics", message -> {
+      logger.info(uuid + ": requesting metrics");
+      getSolaceMetric(message.body().toString(), new Handler() {
+        @Override
+        public void handle(Object event) {
+          logger.debug("response: " + event.toString());
+          message.reply(Util.xml2json(event.toString()));
+        }
+      });
+    });
+
+    eb.consumer("newclient", message -> {
+      logger.info("new client: " + message.body().toString());
+    });
+
+    eb.consumer("broadcast", message -> {
+      logger.info("broadcast: " + message.body().toString());
+    });
+
+    // create periodicals
+    Iterator iter = config.getJsonObject("metrics", new JsonObject()).iterator();
+    while (iter.hasNext()) {
+      Map.Entry<String, JsonObject> entry = (Map.Entry) iter.next();
+      logger.info("registering metric: " + entry.getKey());
+      int interval = entry.getValue().getInteger("interval", 1000);
+      if (interval != 0) {
+        vertx.setPeriodic(interval, tid -> {
+          logger.debug("metric interval handler for " + entry.getKey() + " every " + interval);
+          getSolaceMetric(entry.getKey(), event -> {
+            logger.debug("metric: " + event.toString());
+
+//            JsonObject m = new JsonObject();
+//            m.put(entry.getKey(), Util.xml2json(event.toString()));
+
+//            MetricMessage msg = new MetricMessage()
+//                    .setTopic(entry.getKey())
+//                    .setData(Util.xml2json(event.toString()));
+
+            JsonObject pj = new JsonObject();
+            pj.put("topic", entry.getKey());
+            pj.put("data", Util.xml2json(event.toString()));
+
+
+            // get the config for the metric
+            JsonObject msgConfig = config.getJsonObject("metrics")
+                    .getJsonObject(entry.getKey())
+                    .getJsonObject("config", new JsonObject());
+
+            msgConfig.put("view_format", config.getJsonObject("views", new JsonObject())
+                    .getJsonObject(msgConfig.getString("view", "default")));
+
+            pj.put("config", msgConfig);
+            //msg.setConfig(msgConfig);
+
+            eb.publish(entry.getKey(), pj);
+          });
+        });
+      } else {
+        logger.warn("metric " + entry.getKey() + " is disabled ");
+      }
+    }
+
+    vertx.setTimer(10000, tid -> {
+      eb.publish("broadcast", "server startup: " + config.getString("version", "unknown"));
+    });
+
+    // send completed startup event
+    startFuture.complete();
+
+  }
+
+
+  /*
+  does the request
+   */
+  public void getSolaceMetric(String metricName, Handler handler) {
+
+    try {
+
+      if (host == null) {
+        logger.warn("no config");
+      } else {
+        logger.debug(uuid + " getting metrics from: " + host);
+        HttpClientRequest req = client.post(80, host, "/SEMP", resp -> {
+          resp.bodyHandler(body -> {
+            logger.debug("Response: " + body.toString());
+            handler.handle(body.toString());
+          });
+        });
+
+        req.putHeader(HttpHeaders.Names.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes()));
+        req.end(config.getJsonObject("metrics").getJsonObject(metricName).getString("request"));
+
+      }
+    } catch (Exception e) {
+      logger.warn(e.getMessage());
+
+    }
+  }
+
+}

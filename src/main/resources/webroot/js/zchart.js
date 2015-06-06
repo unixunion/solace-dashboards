@@ -1,0 +1,144 @@
+// My ZChart Class
+
+var ZChart = function(name, dl, divName, type, color)
+{
+  this.name = name;
+  this.dataLength = dl;
+  this.dps = [];
+  this.yVal = 0;
+  this.xVal = 0;
+  this.self = this;
+//  this.intervalType = "second";
+  this.valueFormatString = "HH:mm:ss";
+  this.eventRate = 1; // default event rate, will recalc on update
+  this.eventTokens = 0; // used to keep track of value changes. 
+  this.eventRateCounter = 0; // counter for how many times we have checked
+
+  // if counter, delta on update to stop ever mounding
+  this.counter = false;
+  this.last_val = 0;
+  this.last_dl = dl;
+
+  if (! color ) {
+    this.color = "rgba(40,175,101,0.6)";
+  } else {
+    this.color = color;
+  }
+
+  // render type
+  this.type = type;
+  
+  // create a new DIV
+  var ni = document.getElementById(divName);
+  var newdiv = document.createElement('div');
+  var divIdName = 'zchartContainer' + chartCount;
+  console.log("created chart: " + divIdName );
+  newdiv.setAttribute('id', divIdName);
+  // newdiv.setAttribute('class', "row");
+  newdiv.style.height = '300px';
+  newdiv.style.width = '100%';
+  newdiv.innerHTML = '';
+  ni.appendChild(newdiv);
+  
+  // divider
+  // var divider = document.createElement('div');
+  // divider.setAttribute('class', 'divider');
+  // ni.appendChild(divider);
+  
+  this.chart = new CanvasJS.Chart("zchartContainer" + chartCount,
+  {
+//    animationEnabled: true,
+//    exportEnabled: true,
+//    exportFileName: this.name,
+    colorSet:  "customColorSet1",
+
+
+    interactivityEnabled: ! ismobile,
+
+
+		title :{
+			text: this.name
+		},
+    axisX: {
+      valueFormatString: this.valueFormatString,
+//      intervalType: this.intervalType,
+      labelFontSize: 8,
+      labelAngle: 50
+    },
+    legend:{
+      fontSize: 12,
+    },
+    toolTip:{
+    	content: "{name}: {y}"
+    },
+		data: [{
+			type: this.type,
+      //xValueType: "dateTime",
+      color: this.color,
+      markerSize: 0,
+			dataPoints: this.dps 
+		}]
+	});
+
+
+  this.update = function(y1)
+  {
+    if (this.dataLength != this.last_dl )
+    {
+      console.log("dataLength changed, updating");
+      this.dataLength = dataLength;
+    }
+
+    // if (!this.counter) {
+    //   this.yVal = Math.round(y1);
+    // } else {
+    //   this.yVal = Math.round(y1 - this.last_val);
+    //   this.last_val = y1;
+    // }
+    
+  	this.dps.push({
+  		y: this.yVal,
+      x: new Date()
+  	});
+
+    if (this.dps.length > (this.dataLength*this.eventRate))
+    {
+      this.dps.shift();
+    }
+    
+    this.last_dl = this.dataLength;
+    
+  }
+
+
+  this.clear = function()
+  {
+    while (this.dps.length > 0)
+    {   
+      this.dps.shift();
+    }
+  }
+
+  this.zrender = function()
+  {
+
+    if (self.chart.options.data instanceof Array) {
+      for (var d in self.chart.options.data ) {
+        while (self.chart.options.data[d].dataPoints.length > self.dataLength) {
+          self.chart.options.data[d].dataPoints.shift();
+        }
+      }
+    }
+
+    while (self.dps.length > self.dataLength)
+    {
+       self.dps.shift();
+    }
+    self.chart.render();
+  }
+
+  var self = this;
+  window.setInterval(this.zrender, 1000);
+  chartCount++;
+    
+}
