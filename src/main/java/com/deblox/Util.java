@@ -5,10 +5,11 @@ import com.google.gson.Gson;
 import com.deblox.xml.JSONObject;
 import com.deblox.xml.XML;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.impl.LoggerFactory;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -66,6 +67,23 @@ public class Util {
     }
 
   }
+
+
+  // Read anything
+  static public BufferedReader loadFile(Object o, String file) throws IOException {
+
+    try (InputStream stream = o.getClass().getResourceAsStream(file)) {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+      return reader;
+
+    } catch (IOException e) {
+      System.err.println("Unable to load config, returning with nothing");
+      e.printStackTrace();
+      throw e;
+    }
+  }
+
+
 
   /*
   convert XML to Json

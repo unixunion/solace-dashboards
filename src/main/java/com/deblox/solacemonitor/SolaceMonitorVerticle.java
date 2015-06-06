@@ -11,7 +11,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.impl.LoggerFactory;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
 
@@ -32,9 +32,12 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
   JsonObject config;
 
   String host;
+  int port;
   String username;
   String password;
   String credentials;
+
+  Map<UUID, String> clients;
 
   public void start(Future<Void> startFuture) throws Exception {
 
@@ -42,9 +45,12 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
     config = config();
     host = config().getString("host", null);
-    username = config().getString("username" ,"DEFAULT_USERNAME");
-    password = config().getString("password" ,"DEFAULT_PASSWORD");
+    port = config().getInteger("port", 80);
+    username = config().getString("username", "DEFAULT_USERNAME");
+    password = config().getString("password", "DEFAULT_PASSWORD");
     credentials = String.format("%s:%s", username, password);
+
+    clients = new HashMap<UUID, String>();
 
     uuid = UUID.randomUUID().toString();
     eb = vertx.eventBus();
@@ -70,6 +76,10 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
     eb.consumer("newclient", message -> {
       logger.info("new client: " + message.body().toString());
+      JsonObject client = new JsonObject(message.body().toString());
+      clients.remove(client.getString("uuid"));
+      clients.put(UUID.fromString(client.getString("uuid")), client.getString("version"));
+      eb.consumer(client.getString("uuid"), m -> logger.info("uuid: " + m.body().toString()));
     });
 
     eb.consumer("broadcast", message -> {
@@ -121,6 +131,24 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
     vertx.setTimer(10000, tid -> {
       eb.publish("broadcast", "server startup: " + config.getString("version", "unknown"));
+
+      if (config.getBoolean("reloadClients", false)) {
+        logger.info("sending reload now to all clients");
+
+        clients.forEach((k, v) -> {
+          logger.info("sending reload to: " + k.toString());
+          eb.publish(k.toString(), new JsonObject().put("action", "reload"));
+        });
+
+      }
+
+    });
+
+
+    vertx.setTimer(10000, tid -> {
+      clients.forEach((k,v) -> {
+        logger.info(k + ": " + v);
+      });
     });
 
     // send completed startup event
@@ -140,7 +168,7 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
         logger.warn("no config");
       } else {
         logger.debug(uuid + " getting metrics from: " + host);
-        HttpClientRequest req = client.post(80, host, "/SEMP", resp -> {
+        HttpClientRequest req = client.post(port, host, "/SEMP", resp -> {
           resp.bodyHandler(body -> {
             logger.debug("Response: " + body.toString());
             handler.handle(body.toString());

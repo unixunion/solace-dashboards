@@ -8,7 +8,7 @@
     <script type="text/javascript" src="/js/zchart.js"></script>
     <script type="text/javascript">
 
-    var client_version = "v1.1.1";
+    var client_version = "v1.1.3";
 
     // a place to store VPN objects
     var vpn_data;
@@ -19,7 +19,7 @@
     var charts = [];
     var chartCount = 0; // chart c
     var dataLength = 40; // default graph length
-    var refresh_rate = 1000/10;
+    var refresh_rate = 1000/5;
 
     // message rate
     var target_rate;
@@ -279,9 +279,17 @@
 
 
 
+    function guid() {
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      }
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
+    }
 
-
-
+    var uuid = guid();
 
     // helper for mobile detection
     var ismobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
@@ -323,6 +331,9 @@
         // connect to eventbus
         initialiseEventbus = function() {
 
+
+            $('#modal1').openModal();
+
             if (eb != null && eb.readyState() == 1) {
                 clearInterval(reconnector);
                 return;
@@ -335,14 +346,18 @@
 
         eb.onopen = function () {
             clearInterval(reconnector);
-
+            $('#modal1').closeModal();
             // subscribe to broadcast messages from the server
-            eb.registerHandler("broadcast", function (msg) {
-                app_status(msg);
-            });
+            //console.log("registering handler: " + uuid);
+            //eb.registerHandler(uuid, function (msg) {
+            //    app_status(msg);
+            //});
 
             // request list of VPN, and prime the vpn_charts object
             eb.send("request-metrics", "list-vpns", function(msg) {
+                //console.log("list-vpns:");
+                //console.log(msg);
+
                 // if vpn_data is undefined, populate it
                 if (vpn_data == undefined) {
                     vpn_data = [];
@@ -373,13 +388,23 @@
             });
 
             // announce yourself to the server
-            eb.publish("newclient", client_version);
+            //eb.publish("newclient", client_version);
+            var t = {
+                "version": client_version,
+                "uuid": uuid
+            }
+            eb.send("newclient", t);
 
             app_status("Registering Handlers");
 
-            // allows the server to demand reloading of all clients
-            eb.registerHandler("reloadMonkey", function(msg) {
-                if (msg=="doit") { location.reload(); }
+            // allows the server to send special commands to THIS client
+            eb.registerHandler(uuid, function(msg) {
+                console.log("uuid message");
+                console.log(msg);
+                if (msg.action == "reload") {
+                    console.log("server demands I reload");
+                    location.reload();
+                }
             });
 
             // stats handler is the flipclock
@@ -521,6 +546,16 @@
         </div>
     </div>
 
+    <!-- Modal Structure -->
+    <div id="modal1" class="modal">
+        <div class="modal-content">
+            <h4>Connection Lost</h4>
+            <p>Attempting to re-establish communication.</p>
+        </div>
+        <div class="progress">
+            <div class="indeterminate"></div>
+        </div>
+    </div>
 
 
 </div>

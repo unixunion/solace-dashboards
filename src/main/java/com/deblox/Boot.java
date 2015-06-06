@@ -7,24 +7,20 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.impl.LoggerFactory;
+import io.vertx.core.logging.LoggerFactory;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.jar.Manifest;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 /**
  * Created by Kegan Holtzhausen on 29/05/14.
  *
  * This loads the config and then starts the main application services
+ *
+ * run with -conf conf.json
  *
  */
 public class Boot extends AbstractVerticle {
@@ -112,7 +108,6 @@ public class Boot extends AbstractVerticle {
 
     startedResult.complete();
     logger.info("startup complete");
-
 
   }
 
