@@ -25,3 +25,4 @@ vertx_classpath.txt
 lib
 META-INF
 .vertx
+scripts/libpipeline.yaml
