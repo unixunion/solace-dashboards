@@ -26,7 +26,7 @@ Some metrics can have additional configs e.g.:
 
 |Name|Description|
 |----|-----------|
-|data_path|UNUSED at the moment but is inteneded for aiding the client to extract the neccesary data.|
+|data_path|path hinting to aid the client to extract the neccesary data.|
 |view|the name of the view|
 
 
