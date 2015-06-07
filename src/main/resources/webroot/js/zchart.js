@@ -8,7 +8,6 @@ var ZChart = function(name, dl, divName, type, color)
   this.yVal = 0;
   this.xVal = 0;
   this.self = this;
-//  this.intervalType = "second";
   this.valueFormatString = "HH:mm:ss";
   this.eventRate = 1; // default event rate, will recalc on update
   this.eventTokens = 0; // used to keep track of value changes. 
@@ -25,7 +24,7 @@ var ZChart = function(name, dl, divName, type, color)
     this.color = color;
   }
 
-  // render type
+  // render type area, stackedColumn, ...
   this.type = type;
   
   // create a new DIV
@@ -51,17 +50,13 @@ var ZChart = function(name, dl, divName, type, color)
 //    exportEnabled: true,
 //    exportFileName: this.name,
     colorSet:  "customColorSet1",
-
-
     interactivityEnabled: ! ismobile,
-
 
 		title :{
 			text: this.name
 		},
     axisX: {
       valueFormatString: this.valueFormatString,
-//      intervalType: this.intervalType,
       labelFontSize: 8,
       labelAngle: 50
     },
@@ -71,15 +66,18 @@ var ZChart = function(name, dl, divName, type, color)
     toolTip:{
     	content: "{name}: {y}"
     },
-		data: [{
-			type: this.type,
-      //xValueType: "dateTime",
-      color: this.color,
-      markerSize: 0,
-			dataPoints: this.dps 
-		}]
+		data: []
 	});
 
+  // wanna make this a simple chart?
+  this.initData = function() {
+    this.chart.options.data=[{
+      type: this.type,
+      color: this.color,
+      markerSize: 0,
+      dataPoints: this.dps 
+    }]
+  }
 
   this.update = function(y1)
   {
@@ -88,13 +86,6 @@ var ZChart = function(name, dl, divName, type, color)
       console.log("dataLength changed, updating");
       this.dataLength = dataLength;
     }
-
-    // if (!this.counter) {
-    //   this.yVal = Math.round(y1);
-    // } else {
-    //   this.yVal = Math.round(y1 - this.last_val);
-    //   this.last_val = y1;
-    // }
     
   	this.dps.push({
   		y: this.yVal,
