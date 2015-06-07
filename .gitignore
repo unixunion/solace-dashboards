@@ -26,4 +26,4 @@ lib
 META-INF
 .vertx
 scripts/libpipeline.yaml
-./conf.json
+/conf.json
