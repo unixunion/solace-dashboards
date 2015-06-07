@@ -1,0 +1,139 @@
+// config options per service are as per: DeployOptions.java
+{
+  "environment": "root",
+  "services": ["com.deblox.solacemonitor.SolaceMonitorVerticle", "com.deblox.server.Server"],
+  "com.deblox.solacemonitor.SolaceMonitorVerticle": {
+    "config": {
+      "version": "v1.1.1",
+      "host": "solace",
+      "username": "someusername",
+      "password": "somepassword",
+      "metrics": {
+        "memory": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><memory></memory></show></rpc>",
+          "interval": 0
+        },
+        "stats": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><stats><client></client></stats></show></rpc>",
+          "interval": 2000
+        },
+        "vpns": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>*</vpn-name><stats></stats></message-vpn></show></rpc>",
+          "interval": 5000
+        },
+        "queues": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><queue><name>*</name><vpn-name>*</vpn-name></queue></show></rpc>",
+          "interval": 5000
+        },
+        "list-vpns": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>*</vpn-name></message-vpn></show></rpc>",
+          "interval": 5000
+        },
+        "somevpn": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>somevpn</vpn-name><stats></stats></message-vpn></show></rpc>",
+          "interval": 5000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
+            "view": "generic_vpn_stats"
+          }
+        },
+        "anothervpn": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>anothervpn</vpn-name><stats></stats></message-vpn></show></rpc>",
+          "interval": 5000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
+            "view": "generic_vpn_stats"
+          }
+        }
+      },
+      "views": {
+        "default": {},
+        "generic_vpn_stats": {
+          "rate-per-second": {
+            "show": [
+              "current-egress-rate-per-second",
+              "current-ingress-rate-per-second"
+            ],
+            "chart_type": "stackedColumn",
+            "div": "smallcharts-1"
+          },
+          "denied-by-acl": {
+            "show": [
+              "denied-client-connect-acl"
+            ],
+            "counter": true,
+            "div": "smallcharts-2"
+          },
+          "ingress-discards": {
+            "show": [
+              "msg-spool-discards",
+              "msg-too-big",
+              "no-subscription-match",
+              "parse-error",
+              "publish-topic-acl",
+              "topic-parse-error",
+              "ttl-exceeded"
+            ],
+            "hide": [
+              "total-ingress-discards"
+            ],
+            "counter": true,
+            "data_path": "ingress-discards",
+            "div": "smallcharts-3"
+          },
+          "egress-discards": {
+            "show": [
+              "compression-congestion",
+              "message-elided",
+              "message-promotion-congestion",
+              "msg-spool-egress-discards",
+              "transmit-congestion"
+            ],
+            "counter": true,
+            "data_path": "egress-discards",
+            "div": "smallcharts-4"
+          },
+          "denies": {
+            "show": [
+              "denied-authorization-failed",
+              "denied-client-connect-acl",
+              "denied-duplicate-clients",
+              "denied-subscribe-permission",
+              "denied-subscribe-topic-acl",
+              "denied-unsubscribe-permission",
+              "denied-unsubscribe-topic-acl"
+            ],
+            "counter": true,
+            "div": "smallcharts-1"
+          },
+          "errors": {
+            "show": [
+              "max-exceeded-msgs-sent",
+              "not-enough-space-msgs-sent",
+              "not-found-msgs-sent",
+              "parse-error-on-add-msgs-sent",
+              "parse-error-on-remote-msgs-sent",
+              "subscribe-client-not-found",
+              "unsubscribe-client-not-found",
+              "already-exists-msgs-sent"
+            ],
+            "counter": true,
+            "div": "smallcharts-2"
+          }
+        }
+      }
+    },
+    "worker": false,
+    "multiThreaded": false,
+    "isolationGroup": null,
+    "ha": false,
+    "extraClasspath": null,
+    "instances": 1,
+    "redeploy": true,
+    "redeployScanPeriod": 250,
+    "redeployGracePeriod": 1000
+  },
+  "com.deblox.server.Server": {
+    "port": 8080
+  }
+}
