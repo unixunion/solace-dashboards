@@ -20,12 +20,12 @@
 
 
     var plot_data = function(chartObject, metric, tmp_results, tmpDate) {
-        console.log("chartObject");
-        console.log(chartObject);
+        // console.log("chartObject");
+        // console.log(chartObject);
 
         if (chartObject.counter) {
            
-            console.log("counter!");
+            // console.log("counter!");
             var chart = chartObject.chart.options.data[metric].dataPoints;
             
             try {
@@ -84,7 +84,7 @@
                 vpn_data[msg.topic].charts = [];
             }
         } catch (err) {
-            app_status(msg.topic + " Config Error: " + err);
+            app_error(msg.topic + " Config Error: " + err);
         }
 
         
@@ -131,14 +131,11 @@
 
             var data_path = config[emit_config].data_path;
 
-            if (data_path instanceof Array) {
-                console.log("parent object is array"); 
-                console.log(data);
-
-                for (item in data) {
-                    console.log("data item: " + item);
-                }
-            }
+            // if (data_path != undefined) {
+            //     console.log("requesting sub shift");
+            //     console.log(data);
+            //     data = data_shifter(data, data_path, true);
+            // }
 
             
             for (var e in metric_list ){
@@ -152,7 +149,18 @@
                 // ADD_TOGETHER if you really want it... gonna remove this I think.
                 if ( config[emit_config].modifier != undefined ) {
                     if ( config[emit_config].modifier == "add_together" ) {
-                        tmp_results = tmp_results + data[metric_list[e]];
+                        try {
+                            tmp_results = tmp_results + data[metric_list[e]];
+                        } catch (err) {
+                            app_error("Key Error: " + metric_list[e]);
+                            console.log("---Key Error---");
+                            console.log("error in metric for: " + msg.topic);
+                            console.log("key was " + metric_list[e] + " and its not present in");
+                            console.log(data);
+                            console.log("entire message");
+                            console.log(msg);
+                            console.log("---END Key Error---");
+                        }
                     }
                     
                 // DEFAULT
@@ -161,47 +169,60 @@
                     var data_before_decend = data;
 
                     if (data_path == undefined) {
-                        tmp_results = data[metric_list[e]];
-                    } else if (parent_is_array) {
-                        console.log("array instance by config");
                         try {
-                            for (var item in data) {
-                                console.log("data: ");
-                                console.log(data[item]);
+                            tmp_results = data[metric_list[e]];
+                        } catch (err) {
+                            console.log("---START---");
+                            console.log("error in metric: " + msg.topic);
+                            console.log("key was " + metric_list[e] + " and its not present in");
+                            console.log(data);
+                            console.log("---END---");
+                        }
+                        
+                    // } else if (parent_is_array) {
+                    //     console.log("array instance by config");
+                    //     try {
+                    //         for (var item in data) {
+                    //             console.log("data: ");
+                    //             console.log(data[item]);
 
-                                var tmp_data = data[item];
+                    //             var tmp_data = data[item];
 
-                                try {
-                                    var path_hint = data_path.split(".");
-                                    for (var word in path_hint) {
-                                        data = data[path_hint[word]];
-                                    }
+                    //             try {
+                    //                 var path_hint = data_path.split(".");
+                    //                 for (var word in path_hint) {
+                    //                     data = data[path_hint[word]];
+                    //                 }
 
-                                } catch (err) {
-                                    app_error("Error in data_path: " + msg.topic);
-                                    console.log("error in data_path: " + msg.topic);
-                                    console.log(msg);
-                                }
+                    //             } catch (err) {
+                    //                 app_error("Error in data_path: " + msg.topic);
+                    //                 console.log("error in data_path: " + msg.topic);
+                    //                 console.log(msg);
+                    //             }
 
-                                tmp_results = tmp_data.data[item][metric_list[e]];
+                    //             tmp_results = tmp_data.data[item][metric_list[e]];
 
                                 
-                                console.log("tmp_results: " + tmp_results);
-                                plot_data(vpn_data[msg.topic].charts[emit_config], e, tmp_results, tmpDate);
-                            }
-                        } catch (err) {
-                            app_error("Not a array");
-                        }
+                    //             console.log("tmp_results: " + tmp_results);
+                    //             plot_data(vpn_data[msg.topic].charts[emit_config], e, tmp_results, tmpDate);
+                    //         }
+                    //     } catch (err) {
+                    //         app_error("Not a array");
+                    //     }
 
                     } else {
                         try {
-                            var path_hint = data_path.split(".");
-                            for (var word in path_hint) {
-                                data = data[path_hint[word]];
-                            }
+
+
+                            data = data_shifter(data, data_path, logging);
+
+                            // var path_hint = data_path.split(".");
+                            // for (var word in path_hint) {
+                            //     data = data[path_hint[word]];
+                            // }
 
                         } catch (err) {
-                            app_error("Error in data_path: " + msg.topic);
+                            app_error("Data Path Error: " + msg.topic + "/" + metric_list[e]);
                             console.log("error in data_path: " + msg.topic);
                             console.log(msg);
                         }
@@ -210,9 +231,11 @@
                             tmp_results = data[metric_list[e]];
                         } catch (err) {
                             app_error("Error getting key " + metric_list[e]);
+                            console.log("---START---");
                             console.log("error in metric: " + msg.topic);
                             console.log("key was " + metric_list[e] + " and its not present in");
-                            console.log(msg);
+                            console.log(data);
+                            console.log("---END---");
                         }
                         
                     }
@@ -222,35 +245,6 @@
 
                 plot_data(vpn_data[msg.topic].charts[emit_config], e, tmp_results, tmpDate);
 
-                // CHECK COUNTER, DELTA
-                // if (vpn_data[msg.topic].charts[emit_config].counter) {
-                   
-                //     var chart = vpn_data[msg.topic].charts[emit_config].chart.options.data[e].dataPoints;
-                    
-                //     try {
-                //         var last_val = chart[chart.length-1].last_val;
-                //     } catch(err) {
-                //         console.log("no history, setting to current value for delta");
-                        
-                //         if (hide_counter_first_sample) {
-                //             var last_val = tmp_results;
-                //         } else {
-                //             // If you want to see the initial SPIKE
-                //             var last_val = 0;
-                //         }
-                        
-                //     }
-                // } else {
-                //     var last_val = 0;
-                // }
-
-                // // push custom
-                // var dp = {
-                //     "x": tmpDate,
-                //     "y": tmp_results - last_val,
-                //     "last_val": tmp_results
-                // }
-                // vpn_data[msg.topic].charts[emit_config].chart.options.data[e].dataPoints.push(dp);
                 
                 data = data_before_decend;
             }
@@ -267,6 +261,9 @@
 
         if (vpn_data_active_topic != msg) {
             app_status("Changing View to " + msg);
+
+            eb.unregisterHandler("queues", queues_handler);
+            eb.unregisterHandler("vpns", vpns_handler);
             
             // clear all charts out
             for (cd in chart_divs) {

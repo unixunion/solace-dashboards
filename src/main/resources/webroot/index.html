@@ -241,7 +241,7 @@
         charts[1].counter = true; // set counter style for Errors
         charts[1].chart.options.data = [];
 
-        charts.push(new ZChart("Notable Queues", dataLength, "bigcharts", chart_type));
+        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "bigcharts", chart_type));
         charts[2].chart.options.data = []; // reset chart 0 first element overriding defaults
 
 
@@ -320,6 +320,23 @@
 
             
             eb.send("request-config", "please", function(msg) {
+
+                // clean menu
+                var list = document.getElementById('metrics-dropdown');
+                while (list.hasChildNodes()) {   
+                    list.removeChild(list.firstChild);
+                }
+
+                // the overview
+                var entry = document.createElement('li');
+                newlink = document.createElement('a');
+                newlink.setAttribute('href', "#!");
+                newlink.setAttribute('class', 'waves-effect waves-teal');
+                newlink.setAttribute('onclick', "location.reload()");
+                newlink.innerHTML="Overview";
+                entry.appendChild(newlink);
+                list.appendChild(entry);
+
                 // check if vpn_data is undefined ( reconnect condition )
                 if (vpn_data == undefined) {
                     vpn_data = [];
@@ -329,6 +346,20 @@
                              "name": msg.metrics[metric]
                          }
                          vpn_data[msg.metrics[metric]] = c
+                    }
+                }
+
+                for (metric in msg.metrics) {
+
+                        // if a metric is missing
+                        if ( vpn_data[msg.metrics[metric]] == undefined ) {
+                            app_status("Registering Metric: " + msg.metrics[metric] );
+                            var c = {
+                             "name": msg.metrics[metric]
+                            }
+                            vpn_data[msg.metrics[metric]] = c
+                        }
+
 
                         var node = document.getElementById('metrics-dropdown');
                         var entry = document.createElement('li');
@@ -340,9 +371,8 @@
                         newlink.innerHTML=msg.metrics[metric];
                         entry.appendChild(newlink);
                         node.appendChild(entry);
-
                     }
-                }
+                
             });
 
             // announce client to the server
@@ -376,6 +406,7 @@
 
             // if this is a reconnect, call set_view_vpn to resubscribe, else just ignore it.
             if (vpn_data_active_topic != "default") {
+
                 set_view_vpn(vpn_data_active_topic);
             }
 
@@ -418,10 +449,10 @@
             <ul id="nav-fixed" class="left blue">
                 <i class="left mdi-file-cloud-done"></i>
 
-                <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="tooltipped mdi-action-assessment" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>
+                <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="mdi-action-assessment" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>
 
                 <!-- Settings  -->
-                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='settings-dropdown'><i class="tooltipped mdi-action-settings-applications" data-position="bottom" data-delay="50" data-tooltip="Settings"></i></a></li>
+                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='settings-dropdown'><i class="mdi-action-settings-applications" data-position="bottom" data-delay="50" data-tooltip="Settings"></i></a></li>
 
                 <!-- menu vpn-->
                 <ul id='metrics-dropdown' class='dropdown-content z-depth-2'>

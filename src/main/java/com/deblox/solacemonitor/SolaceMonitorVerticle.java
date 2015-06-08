@@ -2,7 +2,6 @@ package com.deblox.solacemonitor;
 
 
 import com.deblox.Util;
-import com.deblox.xml.JSONArray;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -121,17 +120,9 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
           getSolaceMetric(entry.getKey(), event -> {
             logger.debug("metric: " + event.toString());
 
-//            JsonObject m = new JsonObject();
-//            m.put(entry.getKey(), Util.xml2json(event.toString()));
-
-//            MetricMessage msg = new MetricMessage()
-//                    .setTopic(entry.getKey())
-//                    .setData(Util.xml2json(event.toString()));
-
             JsonObject pj = new JsonObject();
             pj.put("topic", entry.getKey());
             pj.put("data", Util.xml2json(event.toString()));
-
 
             // get the config for the metric
             JsonObject msgConfig = config.getJsonObject("metrics")
@@ -170,9 +161,11 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
     vertx.setTimer(10000, tid -> {
       clients.forEach((k,v) -> {
-        logger.info(k + ": " + v);
+        logger.info("clients: " + k + ": " + v);
       });
     });
+
+
 
     // send completed startup event
     startFuture.complete();

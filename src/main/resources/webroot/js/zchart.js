@@ -37,7 +37,13 @@ var ZChart = function(name, dl, divName, type, color)
   newdiv.style.height = '300px';
   newdiv.style.width = '100%';
   newdiv.innerHTML = '';
-  ni.appendChild(newdiv);
+
+  try {
+    ni.appendChild(newdiv);
+  } catch (err) {
+    app_error("Div: " + divName + " doesnt' exist");
+  }
+  
   
   // divider
   // var divider = document.createElement('div');

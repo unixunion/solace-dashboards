@@ -60,12 +60,11 @@
             }
             return data_object;
         } catch (err) {
-            console.log("no data_path hint for " + msg.topic);
-            app_status("Data Shift Error: " + msg.topic);
-            console.log("----START-----")
+            app_error("Data Shift Error, is data_path defined?");
+            console.log("----DATA SHIFT ERROR-----")
             console.log(data_object);
             console.log(data_path);
-            console.log("-----END-----")
+            console.log("-----END DATA SHIFT ERROR -----")
             return data_object;
         }
     }
