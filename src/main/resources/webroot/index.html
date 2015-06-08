@@ -8,12 +8,7 @@
     <script type="text/javascript" src="/js/zchart.js"></script>
     <script type="text/javascript">
 
-    var client_version = "v1.1.3";
-
-    // a place to store VPN objects
-    var vpn_data;
-    var vpn_data_length = 40;
-    var vpn_data_active_topic = "default";
+    var client_version = "v1.2.0";
 
     // the current view objects
     var charts = [];
@@ -21,7 +16,7 @@
     var dataLength = 40; // default graph length
     var refresh_rate = 1000/5;
 
-    var min_spool_plot = 5;
+    var min_spool_plot = 100;
     var hide_counter_first_sample = false;
 
     // message rate
@@ -31,12 +26,7 @@
     // is the popup showing
     var popup = false;
 
-    // lock the render / array shifting until data handlers
-    // add topic.name and boolean for each monitored endpoint in vertx
-    // not used at the moment since, its probably bad, m'kay...
-    var lock_render = {};
-
-    // chart type
+    // default chart type
     var chart_type = "stackedColumn";
 
     // public var for eventbus and reconnector timer
@@ -49,8 +39,7 @@
         "bigcharts",
         "smallcharts-1",
         "smallcharts-2",
-        "smallcharts-3",
-        "smallcharts-4"
+        "smallcharts-3"
     ]
 
 
@@ -69,266 +58,19 @@
         Materialize.toast(msg, 2500, 'z-depth-4')
     };
 
-
-    // handls show vpn-name X stats, topic name is the key to value in vpn_data
-    var vpn_stats_handler = function(msg) {
-        
-        lock_render[msg.topic] = true;
-        // on chance of logging, set to true
-        var logging = chance_of_logging();
-        var tmpDate = new Date();
-        
-        if (logging) {
-            console.log("vpn_data msg");
-            console.log(msg);
-        }
-
-        var path_hint;
-        // get the pathing hint from msg.config
-        try {
-            path_hint = msg.config['data_path'].split(".");
-            console.log("vpn_stats_handler path_hint: " + path_hint);
-        } catch (err) {
-            console.log("no data_path hint for " + msg.topic);
-        }
-
-        var data = msg.data
-        // read the data from the message
-        for (var word in path_hint) {
-            data = data[path_hint[word]]
-        }
-
-        console.log("shifted data");
-        console.log(data);
-
-
-        //var data = msg.data['rpc-reply'].rpc.show['message-vpn'].vpn.stats;
-
-        // read the config out of the message
-        var config = msg.config['view_format'];
-        
-        if (logging) {
-            console.log("vpn_data config");
-            console.log(config);
-        }
-        
-        // if this msg.topic has no charts, create a array for them
-        if (vpn_data[msg.topic].charts == undefined) {
-            vpn_data[msg.topic].charts = [];
-        }
-        
-        for (var emit_config in config) {
-            
-            var metric_list = config[emit_config].show;
-            
-            if (vpn_data[msg.topic].charts[emit_config] == undefined) {
-
-                // always log creations
-                console.log("create chart config: " + emit_config);
-                console.log(config[emit_config]);
-                
-
-                var div_name = (config[emit_config].div === undefined) ? "bigcharts" : config[emit_config].div;
-                var chart_type = (config[emit_config].chart_type == undefined) ? "stackedColumn" : config[emit_config].chart_type;
-                var chart_length = (config[emit_config].chart_length == undefined) ? 10 : config[emit_config].chart_length;
-                var counter = (config[emit_config].counter == undefined) ? false : config[emit_config].counter;
-                var data_path = config[emit_config].data_path;
-                var metric_list = config[emit_config].show;             
-                
-                
-                vpn_data[msg.topic].charts[emit_config] = new ZChart(emit_config, chart_length, div_name, chart_type);
-                vpn_data[msg.topic].charts[emit_config].counter = counter;
-                
-                // if multiple values, create multiple datapoint objects
-                vpn_data[msg.topic].charts[emit_config].chart.options.data = [];
-                
-                for (var e in metric_list ) {
-                    vpn_data[msg.topic].charts[emit_config].chart.options.data.push(
-                        {
-                            type: chart_type,
-                            dataPoints: [],
-                            name: config[emit_config].show[e],
-                            showInLegend: !ismobile,
-                        }
-                    );
-                }
-                
-            }
-            
-            for (var e in metric_list ){
-                // console.log("update value for: " + config[emit_config].map.show.list[e]);
-                //
-                // console.log("e: " + e);
-                //
-                // console.log("raw data");
-                // console.log(data);
-                //
-                // console.log("data " + data[config[emit_config].map.show.list[e]]);
-                
-                var tmp_results = 0;
-                
-                // ADD_TOGETHER if you really want it... gonna remove this I think.
-                if ( config[emit_config].modifier != undefined ) {
-                    if ( config[emit_config].modifier == "add_together" ) {
-                        tmp_results = tmp_results + data[metric_list[e]];
-                    }
-
-
-                    
-                // DEFAULT
-                } else {
-
-                    var data_before_decend = data;
-
-                    if (data_path == undefined){
-                        tmp_results = data[metric_list[e]];
-                    } else {
-                        console.log("hunting: " + metric_list[e]);
-                        console.log("dump data: ");
-                        console.log(data);
-                        // traverse into the data path.
-                        var path_hint = data_path.split(".");
-                        console.log("path_hint: " + path_hint);
-                        for (var word in path_hint) {
-                            console.log("descending into " + path_hint[word]);
-                            console.log(data);
-                            data = data[path_hint[word]];
-                        }
-                        console.log("final data: ");
-                        console.log(data);
-                        try {
-                            tmp_results = data[metric_list[e]];
-                        } catch (err) {
-                            app_status("Error getting key " + metric_list[e]);
-                        }
-                        
-                    }
-                }
-                
-            
-                // CHECK COUNTER, DELTA
-                if (vpn_data[msg.topic].charts[emit_config].counter) {
-                   
-                    var chart = vpn_data[msg.topic].charts[emit_config].chart.options.data[e].dataPoints;
-                    
-                    try {
-                        var last_val = chart[chart.length-1].last_val;
-                    } catch(err) {
-                        console.log("no history, setting to current value for delta");
-                        
-                        if (show_counters_as_delta) {
-                            var last_val = tmp_results;
-                        } else {
-                            // If you want to see the initial SPIKE
-                            var last_val = 0;
-                        }
-                        
-                    }
-                } else {
-                    var last_val = 0;
-                }
-
-                // push custom
-                var dp = {
-                    "x": tmpDate,
-                    "y": tmp_results - last_val,
-                    "last_val": tmp_results
-                }
-                vpn_data[msg.topic].charts[emit_config].chart.options.data[e].dataPoints.push(dp);
-                
-                data = data_before_decend;
-            }
-            
-        }
-
-        lock_render[msg.topic] = false;
-      
-        
-    }
-
-    // set the view
-    var set_view_vpn = function(msg) {
-
-        lock_render[msg.topic] = true;
-
-        if (vpn_data_active_topic != msg) {
-            app_status("Changing View to " + msg);
-            
-            // clear all charts out
-            for (cd in chart_divs) {
-                var list = document.getElementById(chart_divs[cd]);
-                while (list.hasChildNodes()) {   
-                    list.removeChild(list.firstChild);
-                }
-            }
-
-            try {
-                vpn_data[vpn_data_active_topic].charts = {}
-            } catch (err) {
-                console.log("no object " + vpn_data_active_topic + " in vpn_data");
-            }
-            chartCount = 0;
-            
-            // unregister and register the new topic
-            eb.unregisterHandler(vpn_data_active_topic, vpn_stats_handler);
-            eb.registerHandler(msg, vpn_stats_handler);
-            vpn_data_active_topic = msg;
-
-            // set the VPN name in the NavBar
-            document.getElementById("app_title").innerHTML = msg;
-            
-            // shrink the counter
-            try {
-                document.getElementById("flipclock").style.zoom = 0.5;
-                document.getElementById("flipclock").style.MozTransition = "transform: scale(0.5)";
-            } catch (err) {
-                console.log("unable to resize flipclock");
-            }
-            
-            app_status("Please Standby");
-            
-        } else {
-            app_status("you're already there, resubscribing");
-            eb.unregisterHandler(vpn_data_active_topic, vpn_stats_handler);
-            eb.registerHandler(msg, vpn_stats_handler);
-        }
-
-        lock_render[msg.topic] = false;
-        
-    }
-
-
-    // stats handler for basic rate information for the flipclock
-    var stats_handler = function (msg) {
-
-        lock_render[msg.topic] = true;
-
-        if (Math.floor((Math.random() * 100) + 1) < chance_of_logging) {
-            console.log("stats");
-            console.log(msg);
-        }
-
-        // the main counter
-        var data = msg.data['rpc-reply'].rpc.show.stats.client.global.stats;
-        target_rate = data['total-client-messages-received'] + data['total-client-messages-sent'];
-
-        lock_render[msg.topic] = false;
-
-    }
-
+    var app_error = app_status;
 
 
     // queues handler
     var queues_handler = function (msg) {
 
-        lock_render[msg.topic] = true;
-
         var tmpDate = new Date();
+        logging = chance_of_logging;
 
         var data = msg.data['rpc-reply'].rpc.show.queue.queues.queue;
 
         // 30 % change of logging
-        if (Math.floor((Math.random() * 100) + 1) < chance_of_logging) {
+        if (logging) {
             console.log("queues");
             console.log(msg);
         }
@@ -338,7 +80,7 @@
                 //console.log("creating initial element for " + data[i].name);
                 charts[2].chart.options.data.push(
                     {
-                        type: "stackedColumn",
+                        type: chart_type,
                         dataPoints: [],
                         name: data[i].name
                     }
@@ -347,7 +89,6 @@
             } else {
 
                 if (Math.ceil(data[i].info['num-messages-spooled']) < min_spool_plot ) {
-                    // We dont care below 300, so supress it by setting 0
                     var dp = {
                         "x": tmpDate,
                         "y": 0
@@ -367,7 +108,6 @@
             }
         }
 
-        lock_render[msg.topic] = false;
 
     }
 
@@ -375,14 +115,14 @@
     // vpns handler
     var vpns_handler = function (msg) {
 
-        lock_render[msg.topic] = true;
+        logging = chance_of_logging;
+
         var tmpDate = new Date();
 
-        var data = msg.data['rpc-reply'].rpc.show['message-vpn'].vpn;
+        var data = data_shifter(msg.data, msg.config['data_path'], logging);
 
-        // 30 % change of logging
-        if (Math.floor((Math.random() * 100) + 1) < chance_of_logging) {
-            console.log("vpns");
+        if (logging) {
+            console.log("vpns_handler: ");
             console.log(msg);
         }
         
@@ -394,7 +134,7 @@
                         type: chart_type,
                         dataPoints: [],
                         name: data[i].name,
-                        showInLegend: !ismobile,
+                        showInLegend: true
                     }
                 );
 
@@ -403,15 +143,17 @@
                         type: chart_type,
                         dataPoints: [],
                         name: data[i].name,
+                        showInLegend: true
                     }
                 );
 
 
             } else {
 
+                // "y": data[i].stats['current-egress-rate-per-second'] + data[i].stats['current-ingress-rate-per-second']
                 var dp = {
                     "x": tmpDate,
-                    "y": data[i].stats['current-egress-rate-per-second'] + data[i].stats['current-ingress-rate-per-second']
+                    "y": data[i].stats['average-egress-rate-per-minute'] + data[i].stats['average-ingress-rate-per-minute']
                 }
                 charts[0].chart.options.data[i].dataPoints.push(dp);
                 
@@ -421,7 +163,7 @@
                     var last_val = charts[1].chart.options.data[i].dataPoints[charts[1].chart.options.data[i].dataPoints.length-1].last_val;
                 } catch(err) {
                     // if no datapoints, set last_val to current val to kill of the HUGE spike in new graph creation
-                    if ( show_counters_as_delta ) {
+                    if ( hide_counter_first_sample ) {
                         var last_val = tmp_val;
                     } else {
                         var last_val = 0;
@@ -440,7 +182,6 @@
             }
         }
 
-        lock_render[msg.topic] = false;
     }
 
 
@@ -462,9 +203,15 @@
     // helper for mobile detection
     var ismobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 
-
   
     </script>
+
+    <!-- vpn stats handler -->
+    <script src="/js/vpn-stats-handler.js"></script>
+
+    <!-- helpers -->
+    <script src="/js/helpers.js"></script>
+    <script src="/js/generic-stats.js"></script>
 
     <script src="/js/jquery.js"></script>
     <script src="/js/canvasjs.js"></script>
@@ -487,23 +234,36 @@
             "#22aa99", "#999999", "#705770", "#109618", "#a32929"
         ]);
 
-        charts.push(new ZChart("Message Rate", dataLength, "bigcharts", "area"));
+        charts.push(new ZChart("Message Rate", dataLength, "bigcharts", chart_type));
         charts[0].chart.options.data = []; // reset chart 0 first element overriding defaults
 
-        charts.push(new ZChart("Discard Delta", 10, "charts", "stackedColumn"));
+        charts.push(new ZChart("Discard Delta", 10, "charts", chart_type));
         charts[1].counter = true; // set counter style for Errors
         charts[1].chart.options.data = [];
 
-        charts.push(new ZChart("Notable Queues", dataLength, "bigcharts", "stackedColumn"));
+        charts.push(new ZChart("Notable Queues", dataLength, "bigcharts", chart_type));
         charts[2].chart.options.data = []; // reset chart 0 first element overriding defaults
+
+
+        // $('#modal1').leanModal({
+        //   dismissible: false, // Modal can be dismissed by clicking outside of the modal
+        //   opacity: .5, // Opacity of modal background
+        //   in_duration: 300, // Transition in duration
+        //   out_duration: 200, // Transition out duration
+        //   ready: function() { app_status('Modal Ready'); }, // Callback for Modal open
+        //   complete: function() { app_status('Modal Complete'); } // Callback for Modal close
+        // });
 
 
         // connect to eventbus
         initialiseEventbus = function() {
 
             if (!popup) {
-                $('#modal1').openModal();
+                //$('#modal1').openModal();
                 popup = true;
+                // MODAL configure
+                
+                $('#modal1').openModal()
             }
 
             if (eb != null && eb.readyState() == 1) {
@@ -522,43 +282,65 @@
                 $('#modal1').closeModal();
                 popup = false;
             }
+
+
+            // // request list of VPN, and prime the vpn_charts object
+            // eb.send("request-metrics", "list-vpns", function(msg) {
+            //     //console.log("list-vpns:");
+            //     //console.log(msg);
+
+            //     // if vpn_data is undefined, populate it
+            //     if (vpn_data == undefined) {
+            //         vpn_data = [];
+            //         console.log("init list-vpns reply:");
+            //         var data = msg['rpc-reply'].rpc.show['message-vpn'].vpn;
+            //         console.log(data);
+            //         for (var i in data) {
+            //             var c = {
+            //                 "name": data[i].name,
+            //             }
+            //             console.log("registering vpn_data key: " + data[i].name);
+            //             vpn_data[data[i].name] = c
+                        
+            //             // register UI
+            //             var node = document.getElementById('vpns');
+            //             var entry = document.createElement('li');
+                        
+            //             newlink = document.createElement('a');
+            //             newlink.setAttribute('href', "#!");
+            //             newlink.setAttribute('class', 'waves-effect waves-teal');
+            //             newlink.setAttribute('onclick', "set_view_vpn('" +data[i].name + "')");
+            //             newlink.innerHTML=data[i].name;
+            //             entry.appendChild(newlink);
+            //             node.appendChild(entry);
+                        
+            //         }
+            //     }
+            // });
+
             
-            // subscribe to broadcast messages from the server
-            //console.log("registering handler: " + uuid);
-            //eb.registerHandler(uuid, function (msg) {
-            //    app_status(msg);
-            //});
-
-            // request list of VPN, and prime the vpn_charts object
-            eb.send("request-metrics", "list-vpns", function(msg) {
-                //console.log("list-vpns:");
-                //console.log(msg);
-
-                // if vpn_data is undefined, populate it
+            eb.send("request-config", "please", function(msg) {
+                // check if vpn_data is undefined ( reconnect condition )
                 if (vpn_data == undefined) {
                     vpn_data = [];
-                    console.log("init list-vpns reply:");
-                    var data = msg['rpc-reply'].rpc.show['message-vpn'].vpn;
-                    console.log(data);
-                    for (var i in data) {
+                    for (metric in msg.metrics) {
+                        console.log("registering metric config: " + msg.metrics[metric]);
                         var c = {
-                            "name": data[i].name,
-                        }
-                        console.log("registering vpn_data key: " + data[i].name);
-                        vpn_data[data[i].name] = c
-                        
-                        // register UI
-                        var node = document.getElementById('vpns');
+                             "name": msg.metrics[metric]
+                         }
+                         vpn_data[msg.metrics[metric]] = c
+
+                        var node = document.getElementById('metrics-dropdown');
                         var entry = document.createElement('li');
                         
                         newlink = document.createElement('a');
                         newlink.setAttribute('href', "#!");
                         newlink.setAttribute('class', 'waves-effect waves-teal');
-                        newlink.setAttribute('onclick', "set_view_vpn('" +data[i].name + "')");
-                        newlink.innerHTML=data[i].name;
+                        newlink.setAttribute('onclick', "set_view_vpn('" + msg.metrics[metric] + "')");
+                        newlink.innerHTML=msg.metrics[metric];
                         entry.appendChild(newlink);
                         node.appendChild(entry);
-                        
+
                     }
                 }
             });
@@ -583,8 +365,8 @@
                 }
             });
 
-            // stats handler is the flipclock
-            eb.registerHandler("stats", stats_handler);
+            // generic stats handler is the flipclock
+            eb.registerHandler("stats", generic_stats);
 
             // queue stats handler
             eb.registerHandler("queues", queues_handler);
@@ -605,22 +387,13 @@
             reconnector = setInterval(initialiseEventbus, 5000);
             var toggle = true;
 
-            // added toggle to get 30 FPS instead of 60 FPS
-            (function loop() {
-                toggle = !toggle;
-                if (toggle) {
-                    requestAnimationFrame(loop);
-                    return;
-                }
-                noise(ctx);
-                requestAnimationFrame(loop);
-            })();
         }
         
         // make flipclock smaller on mobile
         if (ismobile) {
             document.getElementById("flipclock").style.zoom = 0.5;
             document.getElementById("flipclock").style.MozTransition = "transform: scale(0.5)";
+            toggle_legend();
         }
 
     }
@@ -639,15 +412,27 @@
 <div class="navbar-fixed">
     <nav>
         <div class="nav-wrapper blue">
+
             <a href="#" id="app_title" class="hide-on-small-only brand-logo center">Solace Monitor</a>
+
             <ul id="nav-fixed" class="left blue">
+                <i class="left mdi-file-cloud-done"></i>
 
-                <li><a class='dropdown-button' href='#' data-activates='vpns'>Select VPN Dashboard<i class="waves-effect mdi-action-assessment right"></i></a></li>
+                <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="tooltipped mdi-action-assessment" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>
 
-                <!-- chart style options -->
-                <ul id='vpns' class='dropdown-content z-depth-2'>
+                <!-- Settings  -->
+                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='settings-dropdown'><i class="tooltipped mdi-action-settings-applications" data-position="bottom" data-delay="50" data-tooltip="Settings"></i></a></li>
+
+                <!-- menu vpn-->
+                <ul id='metrics-dropdown' class='dropdown-content z-depth-2'>
                     <li><a href="#!" class='waves-effect waves-teal' onclick=location.reload()>Overview</a></li>
                 </ul>
+
+                <!-- menu settings -->
+                <ul id='settings-dropdown' class='dropdown-content z-depth-2'>
+                    <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_legend()>Legend</a></li>
+                </ul>
+
 
             </ul>
         </div>
@@ -662,14 +447,13 @@
                 <div id="flipclock" class="h1z1-clock"></div>
             </div>
             <div class="row">
-                <div id="bigcharts" class="bigcharts col s12 l9 zchartContainer valign center"></div>
-                <div id="charts" class="col s12 l3 zchartContainer valign center"></div>
+                <div id="bigcharts" class="bigcharts col s12 l8 zchartContainer valign center"></div>
+                <div id="charts" class="col s12 l4 zchartContainer valign center"></div>
             </div>
             <div class="row">
-                <div id="smallcharts-1" class="col s12 l3 zchartContainer valign center"></div>
-                <div id="smallcharts-2" class="col s12 l3 zchartContainer valign center"></div>
-                <div id="smallcharts-3" class="col s12 l3 zchartContainer valign center"></div>
-                <div id="smallcharts-4" class="col s12 l3 zchartContainer valign center"></div>
+                <div id="smallcharts-1" class="col s12 l4 zchartContainer valign center"></div>
+                <div id="smallcharts-2" class="col s12 l4 zchartContainer valign center"></div>
+                <div id="smallcharts-3" class="col s12 l4 zchartContainer valign center"></div>
             </row>
         </div>
     </div>
@@ -677,13 +461,15 @@
     <!-- Modal Structure -->
     <div id="modal1" class="modal">
 
-        <canvas id="canvas">
-            <!-- <div class="modal-content">
+        <!-- <canvas id="canvas"> -->
+            <div class="modal-content">
                 <h4>Connection Lost</h4>
-                <p>Attempting to re-establish communication.</p>
-            </div> -->
-
-        </canvas>
+                <p>reconnecting...</p>
+            </div>
+            <div class="progress">
+                <div class="indeterminate"></div>
+            </div>
+        <!-- </canvas> -->
     </div>
 
 
@@ -697,7 +483,6 @@
             </div>
         </div>
     </footer>
-
 
 <script type="text/javascript">
  
@@ -721,44 +506,6 @@
     });
 
 
-    // static noise
-    var canvas = document.getElementById('canvas'),
-    ctx = canvas.getContext('2d');
-    ctx.globalCompositeOperation = "multiply";
-    canvas.width = canvas.height = 256;
-
-    var image = new Image();
-    image.src = "/img/nosignal2.jpg";
-
-    function resize() {
-        canvas.style.width = $("#modal1").innerWidth() + 'px';
-        canvas.style.height = $("#modal1").innerHeight() + 'px';
-    }
-    resize();
-    window.onresize = resize;
-
-    function noise(ctx) {
-
-        var w = ctx.canvas.width,
-            h = ctx.canvas.height,
-            idata = ctx.createImageData(w, h),
-            buffer32 = new Uint32Array(idata.data.buffer),
-            len = buffer32.length,
-            i = 0;
-
-        for(; i < len;i++)
-        if (Math.random() < 0.5) buffer32[i] = 0xff111111;
-
-        ctx.putImageData(idata, 0, 0);
-        ctx.font="28px Arial Black";
-        ctx.fillStyle="#FFFFFF";
-        ctx.textAlign = "center";
-        ctx.fillText("Please Standby",128,164);
-        ctx.globalCompositeOperation = "soft-light";
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-
-    }
 
 
   

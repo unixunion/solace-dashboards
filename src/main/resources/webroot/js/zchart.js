@@ -115,12 +115,6 @@ var ZChart = function(name, dl, divName, type, color)
 
     var islocked = false;
 
-    // for (e in lock_render) {
-    //   islocked = lock_render[e];
-    // }
-
-    if (!islocked) {
-
       if (self.chart.options.data instanceof Array) {
         for (var d in self.chart.options.data ) {
           while (self.chart.options.data[d].dataPoints.length > self.dataLength) {
@@ -134,9 +128,7 @@ var ZChart = function(name, dl, divName, type, color)
          self.dps.shift();
       }
       self.chart.render();
-    } else {
-      console.log("not rendering due to lock");
-    }
+
   }
 
   var self = this;

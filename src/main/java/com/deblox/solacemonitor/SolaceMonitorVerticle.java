@@ -2,6 +2,7 @@ package com.deblox.solacemonitor;
 
 
 import com.deblox.Util;
+import com.deblox.xml.JSONArray;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -9,6 +10,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -74,6 +76,27 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
       });
     });
 
+
+    // returns a array of names for all metrics defined in config
+    // used for setting up the client
+    eb.consumer("request-config", message -> {
+      logger.info("config request " + message.body().toString());
+
+      JsonArray results = new JsonArray();
+
+      Iterator iter = config.getJsonObject("metrics", new JsonObject()).iterator();
+      while (iter.hasNext()) {
+        Map.Entry<String, JsonObject> entry = (Map.Entry) iter.next();
+        if (entry.getValue().getBoolean("show_in_menu", false)) {
+          results.add(entry.getKey());
+        }
+      }
+
+      message.reply(new JsonObject().put("metrics", results));
+
+
+    });
+
     eb.consumer("newclient", message -> {
       logger.info("new client: " + message.body().toString());
       JsonObject client = new JsonObject(message.body().toString());
@@ -91,7 +114,7 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
     while (iter.hasNext()) {
       Map.Entry<String, JsonObject> entry = (Map.Entry) iter.next();
       logger.info("registering metric: " + entry.getKey());
-      int interval = entry.getValue().getInteger("interval", 1000);
+      int interval = entry.getValue().getInteger("interval", 5000);
       if (interval != 0) {
         vertx.setPeriodic(interval, tid -> {
           logger.debug("metric interval handler for " + entry.getKey() + " every " + interval);
