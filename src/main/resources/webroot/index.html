@@ -376,13 +376,6 @@
                 
             });
 
-            // announce client to the server
-            var t = {
-                "version": client_version,
-                "uuid": uuid
-            }
-            eb.send("newclient", t);
-
             // tell the user whats what
             app_status("Registering Handlers");
 
@@ -393,8 +386,17 @@
                 if (msg.action == "reload") {
                     console.log("server demands I reload");
                     location.reload();
+                } else if (msg.action == "broadcast") {
+                    app_status(msg.data);
                 }
             });
+
+            // announce client to the server
+            var t = {
+                "version": client_version,
+                "uuid": uuid
+            }
+            eb.send("newclient", t);
 
             // generic stats handler is the flipclock
             eb.registerHandler("stats", generic_stats);

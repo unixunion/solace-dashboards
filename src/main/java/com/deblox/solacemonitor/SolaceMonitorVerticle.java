@@ -97,7 +97,6 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
       JsonObject client = new JsonObject(message.body().toString());
       clients.remove(client.getString("uuid"));
       clients.put(UUID.fromString(client.getString("uuid")), client.getString("version"));
-      eb.consumer(client.getString("uuid"), m -> logger.info("uuid: " + m.body().toString()));
     });
 
     eb.consumer("broadcast", message -> {
