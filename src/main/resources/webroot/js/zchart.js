@@ -41,7 +41,7 @@ var ZChart = function(name, dl, divName, type, color, interval)
   console.log("created chart: " + divIdName );
   newdiv.setAttribute('id', divIdName);
   // newdiv.setAttribute('class', "row");
-  newdiv.style.height = '300px';
+  newdiv.style.height = chart_height;
   newdiv.style.width = '100%';
   newdiv.innerHTML = '';
 

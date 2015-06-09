@@ -8,6 +8,9 @@
     <script type="text/javascript" src="/js/zchart.js"></script>
     <script type="text/javascript">
 
+    // helper for mobile detection
+    var ismobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+
     var client_version = "v1.2.1";
 
     // the current view objects
@@ -15,26 +18,19 @@
     var chartCount = 0; // chart c
     var dataLength = 40; // default graph length
     var refresh_rate = 1000/5;
-    var chart_interval = 5;
+    var chart_interval = 5; // the normal plot interval
 
-    var min_spool_plot = 100;
-    var hide_counter_first_sample = true;
-    var show_alarms = true;
+    if (!ismobile) {
+        var chart_height = window.innerHeight/3 + 'px'; // the chart height, cant use % here. :/
+    } else {
+        var chart_height = '300px';
+    }
 
-    // message rate
-    var target_rate;
-    var current_rate;
+    var min_spool_plot = 100; // minimun number of message required to make the queues graph in Overview
+    var hide_counter_first_sample = true; // for "counters", hide the initial spike when refreshing view.
+    var chart_type = "stackedColumn"; // the chart_type to use ( canvasjs )
 
-    // is the popup showing
-    var popup = false;
 
-    // default chart type
-    var chart_type = "stackedColumn";
-
-    // public var for eventbus and reconnector timer
-    var eb;
-    var reconnector;
-    
     // what chart type divs exist in BODY
     var chart_divs = [
         "charts",
@@ -59,7 +55,6 @@
     var app_status = function(msg) {
         Materialize.toast(msg, 2500, 'z-depth-4')
     };
-
     var app_error = app_status;
 
 
@@ -202,9 +197,17 @@
     // create a uuid 
     var uuid = guid();
 
-    // helper for mobile detection
-    var ismobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 
+
+    // message rate
+    var target_rate;
+    var current_rate;
+    var popup = false; // is the popup showing
+    var show_alarms = true; // initial show_alarms MUST be true, else icon will be out of sync
+
+    // object holders
+    var eb;
+    var reconnector;
   
     </script>
 
