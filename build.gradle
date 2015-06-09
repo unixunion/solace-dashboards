@@ -13,6 +13,9 @@ if (!JavaVersion.current().java8Compatible) {
 }
 
 repositories {
+//    flatDir {
+//        dirs '../sol-jms-6.0.0.146/libs'
+//    }
     maven {
         url = 'http://oss.sonatype.org/content/repositories/snapshots/'
     }
@@ -26,12 +29,13 @@ dependencies {
     compile "ch.qos.logback:logback-classic:$logbackVersion"
     compile "net.sourceforge.argparse4j:argparse4j:$argparseVersion"
     compile "com.google.code.gson:gson:$gsonVersion"
+//    compile files('../sol-jms-6.0.0.146/libs/sol-jms-6.0.0.146.jar')
     testCompile "junit:junit:$junitVersion"
     testCompile "io.vertx:vertx-unit:$vertxVersion"
 }
 
 test {
-    systemProperty 'vertx.logger-delegate-factory-class-name', "io.vertx.core.logging.impl.SLF4JLogDelegateFactory"
+    systemProperty 'vertx.logger-delegate-factory-class-name', "io.vertx.core.logging.SLF4JLogDelegateFactory"
 }
 
 shadowJar {
