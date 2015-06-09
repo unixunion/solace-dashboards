@@ -156,10 +156,16 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
 
     // periodically nuke all the clients and rebuild over time as they ping
-    vertx.setPeriodic(config().getInteger("client_session_refresh", 84000), res -> {
-      logger.info("purging old sessions");
+    vertx.setPeriodic(config().getInteger("client_session_refresh", 300000), res -> {
       clients = new HashMap<UUID, String>();
     });
+
+
+    // periodically show how many clients are connected
+    vertx.setPeriodic(config().getInteger("client_session_show", 180000), res -> {
+      logger.info(clients.size() + " connected clients");
+    });
+
 
 
     startFuture.complete();
@@ -188,7 +194,7 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
   /*
   does the request
    */
-  
+
   public void getSolaceMetric(String metricName, Handler handler) {
 
     try {
