@@ -6,8 +6,8 @@
     "config": {
       "version": "v1.2.1",
       "host": "solace",
-      "username": "someusername",
-      "password": "somepassword",
+      "username": "read_only_user",
+      "password": "password",
       "metrics": {
         "alarm": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><alarm></alarm></show></rpc>",
@@ -53,6 +53,7 @@
         "Default": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>default</vpn-name><stats></stats></message-vpn></show></rpc>",
           "interval": 5000,
+          "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
             "view": "generic_vpn_stats"
@@ -61,6 +62,7 @@
         "My VPN": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>myvpn</vpn-name><stats></stats></message-vpn></show></rpc>",
           "interval": 5000,
+          "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
             "view": "generic_vpn_stats"
