@@ -9,25 +9,46 @@
       "username": "someusername",
       "password": "somepassword",
       "metrics": {
+        "alarm": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><alarm></alarm></show></rpc>",
+          "interval": 5000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.alarm.alarms"
+          }
+        },
         "memory": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><memory></memory></show></rpc>",
-          "interval": 0
+          "interval": 5000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.memory"
+          }
         },
         "stats": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><stats><client></client></stats></show></rpc>",
-          "interval": 2000
+          "interval": 5000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.stats.client.global.stats"
+          }
         },
         "vpns": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>*</vpn-name><stats></stats></message-vpn></show></rpc>",
-          "interval": 5000
+          "interval": 5000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.message-vpn.vpn",
+            "view": "implement some view mechanism to filter what the view should show / hide"
+          }
         },
         "queues": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><queue><name>*</name><vpn-name>*</vpn-name></queue></show></rpc>",
-          "interval": 5000
+          "interval": 5000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.queue.queues.queue",
+            "view": "generic_queue_stats"
+          }
         },
         "list-vpns": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>*</vpn-name></message-vpn></show></rpc>",
-          "interval": 5000
+          "interval": 0
         },
         "somevpn": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>somevpn</vpn-name><stats></stats></message-vpn></show></rpc>",
@@ -49,22 +70,25 @@
       "views": {
         "default": {},
         "generic_vpn_stats": {
-          "rate-per-second": {
+          "Message Rate": {
             "show": [
               "current-egress-rate-per-second",
               "current-ingress-rate-per-second"
             ],
             "chart_type": "stackedColumn",
-            "div": "smallcharts-1"
+            "div": "smallcharts-1",
+            "chart_length": 20
           },
-          "denied-by-acl": {
+          "Message Byte Rate": {
             "show": [
-              "denied-client-connect-acl"
+              "average-egress-byte-rate-per-minute",
+              "average-ingress-byte-rate-per-minute"
             ],
-            "counter": true,
-            "div": "smallcharts-2"
+            "chart_type": "stackedColumn",
+            "div": "smallcharts-2",
+            "chart_length": 20
           },
-          "ingress-discards": {
+          "Ingress Discards": {
             "show": [
               "msg-spool-discards",
               "msg-too-big",
@@ -74,14 +98,12 @@
               "topic-parse-error",
               "ttl-exceeded"
             ],
-            "hide": [
-              "total-ingress-discards"
-            ],
             "counter": true,
             "data_path": "ingress-discards",
-            "div": "smallcharts-3"
+            "div": "smallcharts-3",
+            "chart_length": 10
           },
-          "egress-discards": {
+          "Egress Discards": {
             "show": [
               "compression-congestion",
               "message-elided",
@@ -91,9 +113,10 @@
             ],
             "counter": true,
             "data_path": "egress-discards",
-            "div": "smallcharts-4"
+            "div": "smallcharts-3",
+            "chart_length": 10
           },
-          "denies": {
+          "Denies": {
             "show": [
               "denied-authorization-failed",
               "denied-client-connect-acl",
@@ -101,12 +124,14 @@
               "denied-subscribe-permission",
               "denied-subscribe-topic-acl",
               "denied-unsubscribe-permission",
-              "denied-unsubscribe-topic-acl"
+              "denied-unsubscribe-topic-acl",
+              "denied-client-connect-acl"
             ],
             "counter": true,
-            "div": "smallcharts-1"
+            "div": "smallcharts-1",
+            "chart_length": 40
           },
-          "errors": {
+          "Errors": {
             "show": [
               "max-exceeded-msgs-sent",
               "not-enough-space-msgs-sent",
@@ -118,7 +143,8 @@
               "already-exists-msgs-sent"
             ],
             "counter": true,
-            "div": "smallcharts-2"
+            "div": "smallcharts-2",
+            "chart_length": 40
           }
         }
       }
