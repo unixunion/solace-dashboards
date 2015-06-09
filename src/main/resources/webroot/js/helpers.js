@@ -1,6 +1,13 @@
 
 	var force_legend = true;
 
+    var toggle_alarms = function() {
+        show_alarms = ! show_alarms;
+        var d_c = "mdi-action-alarm-" + ((show_alarms === false) ? "off" : "on");
+        var nav_alarms = document.getElementById("nav_alarms");
+        nav_alarms.setAttribute("class",  d_c);
+    }
+
     var toggle_legend = function() {
 
     	force_legend = !force_legend;
