@@ -19,6 +19,7 @@
 
     var min_spool_plot = 100;
     var hide_counter_first_sample = true;
+    var show_alarms = true;
 
     // message rate
     var target_rate;
@@ -407,6 +408,62 @@
             // handler for vpns
             eb.registerHandler("vpns", vpns_handler);
 
+            eb.registerHandler("alarm", function (msg) {
+                var d = data_shifter(msg.data, msg.config['data_path'], true)
+
+                var node = document.getElementById('alarmscollection');
+                while (node.hasChildNodes()) {   
+                        node.removeChild(node.firstChild);
+                }
+
+                if ( d != undefined ) {
+
+                    var found_alarm = false;
+
+                    for (alarm in d) {
+
+                        var a = document.createElement('li');
+                        a.setAttribute('class', "collection-item avatar");
+
+                        var icon = document.createElement('i')
+                        icon.setAttribute('class', 'mdi-alert-warning circle');
+                        a.appendChild(icon);
+
+                        var title = document.createElement('span');
+                        title.setAttribute('class', 'title');
+                        title.innerHTML = d[alarm]['message'];
+                        a.appendChild(title);
+
+                        for (k in d[alarm]) {
+                            if (k != "message") {
+                                var desc = document.createElement('p');
+                                desc.innerHTML = k + ":" + d[alarm][k];
+                                a.appendChild(desc);
+                                node.appendChild(a);
+                                found_alarm = true;
+                            }
+                        }
+                                       
+                    }
+
+                    if (found_alarm && show_alarms) {
+                        $('#alarmmodal').openModal()
+                    } else {
+                        console.log("thought I did, but I didnt find a alarm");
+                    }
+
+                }
+
+
+
+
+            })
+
+            eb.registerHandler("memory", function (msg) {
+                console.log("memory");
+                console.log(msg);
+            })
+
             // if this is a reconnect, call set_view_vpn to resubscribe, else just ignore it.
             if (vpn_data_active_topic != "default") {
 
@@ -465,6 +522,7 @@
                 <!-- menu settings -->
                 <ul id='settings-dropdown' class='dropdown-content z-depth-2'>
                     <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_legend()>Legend</a></li>
+                    <li><a href="#!" class='waves-effect waves-teal' onclick=show_alarms=!show_alarms>Mute Alarms</a></li>
                 </ul>
 
 
@@ -505,6 +563,14 @@
             </div>
         <!-- </canvas> -->
     </div>
+
+    <div id="alarmmodal" class="modal bottom-sheet">
+    <h4>Alarms</h4>
+    <ul id="alarmscollection" class="collection">
+
+    </ul>
+            
+    </div> 
 
 
 </div>
