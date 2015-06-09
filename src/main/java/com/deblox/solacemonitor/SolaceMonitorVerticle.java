@@ -138,30 +138,35 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
       }
     }
 
-    vertx.setTimer(10000, tid -> {
-      eb.publish("broadcast", "server startup: " + config.getString("version", "unknown"));
-
-      if (config.getBoolean("reloadClients", false)) {
-        logger.info("sending reload now to all clients");
-
-        clients.forEach((k, v) -> {
-          logger.info("sending reload to: " + k.toString());
-          eb.publish(k.toString(), new JsonObject().put("action", "reload"));
-        });
-
-      }
-
-    });
-
 
     vertx.setTimer(10000, tid -> {
-      clients.forEach((k,v) -> {
-        logger.info("clients: " + k + ": " + v);
-      });
+//      clients.forEach((k,v) -> {
+//        logger.info("clients: " + k + ": " + v);
+//          eb.send(k.toString(), "Server Startup " + config.getString("version", "unknown"));
+//      });
+      broadcast("broadcast", "Server Startup " + config.getString("version", "unknown"));
     });
-    
+
     // send completed startup event
     startFuture.complete();
+
+  }
+
+
+  /*
+  broadcast something
+   */
+
+  public void broadcast(String action, String msg) {
+
+    JsonObject message = new JsonObject();
+    message.put("action", action);
+    message.put("data", msg);
+
+    clients.forEach((k,v) -> {
+      logger.info("sending broadcast to client: " + k + ": " + v);
+      eb.send(k.toString(), message);
+    });
 
   }
 

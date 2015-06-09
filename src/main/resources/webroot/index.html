@@ -15,6 +15,7 @@
     var chartCount = 0; // chart c
     var dataLength = 40; // default graph length
     var refresh_rate = 1000/5;
+    var chart_interval = 5;
 
     var min_spool_plot = 100;
     var hide_counter_first_sample = true;
@@ -234,14 +235,14 @@
             "#22aa99", "#999999", "#705770", "#109618", "#a32929"
         ]);
 
-        charts.push(new ZChart("Message Rate", dataLength, "bigcharts", chart_type));
+        charts.push(new ZChart("Message Rate", dataLength, "bigcharts", chart_type, chart_interval));
         charts[0].chart.options.data = []; // reset chart 0 first element overriding defaults
 
-        charts.push(new ZChart("Discard Delta", 10, "charts", chart_type));
+        charts.push(new ZChart("Discard Delta", 10, "charts", chart_type, chart_interval));
         charts[1].counter = true; // set counter style for Errors
         charts[1].chart.options.data = [];
 
-        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "bigcharts", chart_type));
+        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "bigcharts", chart_type), chart_interval);
         charts[2].chart.options.data = []; // reset chart 0 first element overriding defaults
 
 

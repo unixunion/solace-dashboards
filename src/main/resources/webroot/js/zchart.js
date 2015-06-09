@@ -1,6 +1,6 @@
 // My ZChart Class
 
-var ZChart = function(name, dl, divName, type, color)
+var ZChart = function(name, dl, divName, type, color, interval)
 {
   this.name = name;
   this.dataLength = dl;
@@ -26,6 +26,13 @@ var ZChart = function(name, dl, divName, type, color)
 
   // render type area, stackedColumn, ...
   this.type = type;
+
+  // interval
+  if (interval == undefined) {
+    this.interval = 5000;
+  } else {
+    this.interval = interval;
+  }
   
   // create a new DIV
   var ni = document.getElementById(divName);
@@ -64,7 +71,9 @@ var ZChart = function(name, dl, divName, type, color)
     axisX: {
       valueFormatString: this.valueFormatString,
       labelFontSize: 8,
-      labelAngle: 50
+      labelAngle: 50,
+      interval: interval,
+      intervalType: "second",
     },
     legend:{
       fontSize: 12,
@@ -119,8 +128,6 @@ var ZChart = function(name, dl, divName, type, color)
   this.zrender = function()
   {
 
-    var islocked = false;
-
       if (self.chart.options.data instanceof Array) {
         for (var d in self.chart.options.data ) {
           while (self.chart.options.data[d].dataPoints.length > self.dataLength) {
@@ -133,6 +140,7 @@ var ZChart = function(name, dl, divName, type, color)
       {
          self.dps.shift();
       }
+
       self.chart.render();
 
   }
