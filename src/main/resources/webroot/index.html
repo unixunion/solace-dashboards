@@ -397,10 +397,20 @@
 
             // announce client to the server
             var t = {
-                "version": client_version,
-                "uuid": uuid
-            }
-            eb.send("newclient", t);
+                    "version": client_version,
+                    "uuid": uuid
+                }
+                eb.send("newclient", t);
+
+            // periodic pings to server
+            setInterval(function() {
+                var t = {
+                    "version": client_version,
+                    "uuid": uuid
+                }
+                eb.send("client-ping", t);
+            }, 10000);
+
 
             // generic stats handler is the flipclock
             eb.registerHandler("stats", generic_stats);

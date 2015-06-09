@@ -58,11 +58,13 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
     eb = vertx.eventBus();
     client = vertx.createHttpClient();
 
+
     // eventbus request ping listner
     eb.consumer("ping-address", message -> {
       logger.info(uuid + ": replying");
       message.reply("pong!");
     });
+
 
     // eventbus request for metrics listener
     eb.consumer("request-metrics", message -> {
@@ -98,6 +100,13 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
     eb.consumer("newclient", message -> {
       logger.info("new client: " + message.body().toString());
+      JsonObject client = new JsonObject(message.body().toString());
+      clients.remove(client.getString("uuid"));
+      clients.put(UUID.fromString(client.getString("uuid")), client.getString("version"));
+    });
+
+
+    eb.consumer("client-ping", message -> {
       JsonObject client = new JsonObject(message.body().toString());
       clients.remove(client.getString("uuid"));
       clients.put(UUID.fromString(client.getString("uuid")), client.getString("version"));
@@ -143,14 +152,17 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
 
     vertx.setTimer(10000, tid -> {
-//      clients.forEach((k,v) -> {
-//        logger.info("clients: " + k + ": " + v);
-//          eb.send(k.toString(), "Server Startup " + config.getString("version", "unknown"));
-//      });
       broadcast("broadcast", "Server Startup " + config.getString("version", "unknown"));
     });
 
-    // send completed startup event
+
+    // periodically nuke all the clients and rebuild over time as they ping
+    vertx.setPeriodic(config().getInteger("client_session_refresh", 84000), res -> {
+      logger.info("purging old sessions");
+      clients = new HashMap<UUID, String>();
+    });
+
+
     startFuture.complete();
 
   }
