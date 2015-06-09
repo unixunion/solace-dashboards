@@ -32,13 +32,11 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
   String uuid;
   HttpClient client;
   JsonObject config;
-
   String host;
   int port;
   String username;
   String password;
   String credentials;
-
   Map<UUID, String> clients;
 
   public void start(Future<Void> startFuture) throws Exception {
@@ -51,9 +49,7 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
     username = config().getString("username", "DEFAULT_USERNAME");
     password = config().getString("password", "DEFAULT_PASSWORD");
     credentials = String.format("%s:%s", username, password);
-
     clients = new HashMap<UUID, String>();
-
     uuid = UUID.randomUUID().toString();
     eb = vertx.eventBus();
     client = vertx.createHttpClient();
@@ -98,6 +94,7 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
 
     });
 
+
     eb.consumer("newclient", message -> {
       logger.info("new client: " + message.body().toString());
       JsonObject client = new JsonObject(message.body().toString());
@@ -112,9 +109,11 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
       clients.put(UUID.fromString(client.getString("uuid")), client.getString("version"));
     });
 
+
     eb.consumer("broadcast", message -> {
       logger.info("broadcast: " + message.body().toString());
     });
+
 
     // create periodicals
     Iterator iter = config.getJsonObject("metrics", new JsonObject()).iterator();
@@ -189,6 +188,7 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
   /*
   does the request
    */
+  
   public void getSolaceMetric(String metricName, Handler handler) {
 
     try {
