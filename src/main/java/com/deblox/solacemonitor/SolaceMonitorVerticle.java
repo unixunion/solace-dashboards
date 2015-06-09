@@ -82,13 +82,17 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
     eb.consumer("request-config", message -> {
       logger.info("config request " + message.body().toString());
 
+      JsonObject response = new JsonObject();
+
       JsonArray results = new JsonArray(config.getJsonObject("metrics").stream()
                       .filter(r -> ((JsonObject)r.getValue()).getBoolean("show_in_menu", false))
                       .map(r -> r.getKey())
                       .sorted()
                       .collect(Collectors.toList()));
 
-      message.reply(new JsonObject().put("metrics", results));
+      response.put("metrics", results);
+
+      message.reply(response);
 
     });
 
