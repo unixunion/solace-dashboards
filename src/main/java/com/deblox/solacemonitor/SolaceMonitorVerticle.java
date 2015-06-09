@@ -15,6 +15,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /*
  * Solace Monitor Dashboard Verticle
@@ -81,18 +82,13 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
     eb.consumer("request-config", message -> {
       logger.info("config request " + message.body().toString());
 
-      JsonArray results = new JsonArray();
-
-      Iterator iter = config.getJsonObject("metrics", new JsonObject()).iterator();
-      while (iter.hasNext()) {
-        Map.Entry<String, JsonObject> entry = (Map.Entry) iter.next();
-        if (entry.getValue().getBoolean("show_in_menu", false)) {
-          results.add(entry.getKey());
-        }
-      }
+      JsonArray results = new JsonArray(config.getJsonObject("metrics").stream()
+                      .filter(r -> ((JsonObject)r.getValue()).getBoolean("show_in_menu", false))
+                      .map(r -> r.getKey())
+                      .sorted()
+                      .collect(Collectors.toList()));
 
       message.reply(new JsonObject().put("metrics", results));
-
 
     });
 
@@ -133,7 +129,6 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
                     .getJsonObject(msgConfig.getString("view", "default")));
 
             pj.put("config", msgConfig);
-            //msg.setConfig(msgConfig);
 
             eb.publish(entry.getKey(), pj);
           });
@@ -164,9 +159,7 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
         logger.info("clients: " + k + ": " + v);
       });
     });
-
-
-
+    
     // send completed startup event
     startFuture.complete();
 

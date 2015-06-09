@@ -1,2 +1,4 @@
+#!/usr/bin/env bash
 JAVA_OPTS="-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory"
-java $JAVA_OPTS -jar build/libs/solace-dashboards-1.1.1-fat.jar $@
+JAVA_HOME="/opt/jdk1.8.0_45"
+$JAVA_HOME/bin/java $JAVA_OPTS -jar solace-dashboards-1.2.0-fat.jar -conf conf.json
