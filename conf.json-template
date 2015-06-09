@@ -4,7 +4,7 @@
   "services": ["com.deblox.solacemonitor.SolaceMonitorVerticle", "com.deblox.server.Server"],
   "com.deblox.solacemonitor.SolaceMonitorVerticle": {
     "config": {
-      "version": "v1.1.1",
+      "version": "v1.2.1",
       "host": "solace",
       "username": "someusername",
       "password": "somepassword",
@@ -50,16 +50,16 @@
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>*</vpn-name></message-vpn></show></rpc>",
           "interval": 0
         },
-        "somevpn": {
-          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>somevpn</vpn-name><stats></stats></message-vpn></show></rpc>",
+        "Default": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>default</vpn-name><stats></stats></message-vpn></show></rpc>",
           "interval": 5000,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
             "view": "generic_vpn_stats"
           }
         },
-        "anothervpn": {
-          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>anothervpn</vpn-name><stats></stats></message-vpn></show></rpc>",
+        "My VPN": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>myvpn</vpn-name><stats></stats></message-vpn></show></rpc>",
           "interval": 5000,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
