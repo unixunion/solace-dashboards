@@ -9,6 +9,13 @@
       "username": "read_only_user",
       "password": "password",
       "metrics": {
+        "events": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><log><event><find/><search-string>HIGH</search-string></event></log></show></rpc>",
+          "interval": 15000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.alarm.alarms"
+          }
+        },
         "alarm": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><alarm></alarm></show></rpc>",
           "interval": 5000,

@@ -14,9 +14,11 @@
     }
 
 
-    var toggle_chart_area = function() {
-        toggle_chart_property("type", "area");
+
+    var toggle_chart_type = function(msg) {
+        toggle_chart_property("type" ,msg);
     }
+
 
 
     // iterate through all data object's charts and turn off legend.

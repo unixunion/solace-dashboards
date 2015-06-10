@@ -460,6 +460,8 @@
             // handler for vpns
             eb.registerHandler("vpns", vpns_handler);
 
+            eb.registerHandler("events", view_handler);
+
             eb.registerHandler("alarm", function (msg) {
                 var d = data_shifter(msg.data, msg.config['data_path'], true)
 
@@ -562,13 +564,10 @@
             <ul id="nav-fixed" class="left blue">
                 <!-- <i class="left mdi-file-cloud-done"></i> -->
 
-                <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="mdi-action-assessment" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>
-
-                <!-- Settings  -->
-                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='settings-dropdown'><i class="mdi-action-settings-applications" data-position="bottom" data-delay="50" data-tooltip="Settings"></i></a></li>
+                <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="mdi-navigation-menu" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>            
 
                 <!-- chart Type  -->
-                <li><a class='dropdown-button' data-beloworigin="true" href='#' data-activates='chart-type-dropdown'><i class="mdi-action-settings-applications"></i></a></li>
+                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='chart-type-dropdown'><i class="mdi-editor-insert-chart"></i></a></li>
 
                 <li><a class='button' onclick=toggle_alarms()><i id="nav_alarms" class="mdi-action-alarm-on"></i></a></li>
 
@@ -578,14 +577,12 @@
                     <li><a href="#!" class='waves-effect waves-teal' onclick=set_view("default")>Overview</a></li>
                 </ul>
 
-                <!-- menu settings -->
-                <ul id='settings-dropdown' class='dropdown-content z-depth-2'>
-                    <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_legend()>Legend</a></li>
-                </ul>
-
 
                 <ul id='chart-type-dropdown' class='dropdown-content z-depth-2'>
-                    <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_area()>Area</a></li>
+                    <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_legend()>Legend</a></li>
+                     <li class="divider"></li>
+                    <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_type('stackedArea')>Area</a></li>
+                    <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_type('stackedColumn')>Column</a></li>
                 </ul>
 
 
