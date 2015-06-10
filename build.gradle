@@ -29,7 +29,10 @@ dependencies {
     compile "ch.qos.logback:logback-classic:$logbackVersion"
     compile "net.sourceforge.argparse4j:argparse4j:$argparseVersion"
     compile "com.google.code.gson:gson:$gsonVersion"
-//    compile files('../sol-jms-6.0.0.146/libs/sol-jms-6.0.0.146.jar')
+    compile "javax.jms:jms:1.1"
+//    compile files("sol-jms")
+//    compile files('sol-jms-6.0.0.146.jar')
+//    compile files('j2ee.jar')
     testCompile "junit:junit:$junitVersion"
     testCompile "io.vertx:vertx-unit:$vertxVersion"
 }
@@ -38,7 +41,16 @@ test {
     systemProperty 'vertx.logger-delegate-factory-class-name', "io.vertx.core.logging.SLF4JLogDelegateFactory"
 }
 
+
+//task copyToLib( type: Copy ) {
+//    into "$buildDir/libs/lib"
+//    from configurations.runtime
+//}
+//
+//build.dependsOn(copyToLib)
+
 shadowJar {
+//    dependsOn copyToLib
     classifier = 'fat'
     manifest {
         attributes 'Main-Class': 'io.vertx.core.Starter'

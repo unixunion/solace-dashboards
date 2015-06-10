@@ -46,10 +46,10 @@ public class SolaceMonitorVerticleTest {
       logger.warn(e.getMessage());
     }
 
-    DeploymentOptions serviceConfig = new DeploymentOptions(config.getJsonObject(SolaceMonitorVerticle.class.getName()));
+    DeploymentOptions serviceConfig = new DeploymentOptions(new JsonObject().put("config", config));
 
     Async async = context.async();
-    vertx.deployVerticle(SolaceMonitorVerticle.class.getName(), serviceConfig, res -> {
+    vertx.deployVerticle(Boot.class.getName(), serviceConfig, res -> {
       if (res.succeeded()) {
         try {
           Thread.sleep(1000);

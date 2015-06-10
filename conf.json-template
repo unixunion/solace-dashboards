@@ -139,7 +139,7 @@
               "not-enough-space-msgs-sent",
               "not-found-msgs-sent",
               "parse-error-on-add-msgs-sent",
-              "parse-error-on-remote-msgs-sent",
+              "parse-error-on-remove-msgs-sent",
               "subscribe-client-not-found",
               "unsubscribe-client-not-found",
               "already-exists-msgs-sent"

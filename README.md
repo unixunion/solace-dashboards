@@ -247,6 +247,8 @@ metrics defined in conf.json are polled by the server and broadcast to their res
 
 ## building
 
+copy solace libs into src/main/resources/platform_lib
+
 the gradle task *shadowJar* will build a executable jar
 
 ```

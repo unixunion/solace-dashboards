@@ -83,12 +83,16 @@ public class SolaceMonitorVerticle extends AbstractVerticle {
       JsonObject response = new JsonObject();
 
       JsonArray results = new JsonArray(config.getJsonObject("metrics").stream()
-                      .filter(r -> ((JsonObject)r.getValue()).getBoolean("show_in_menu", false))
+//                      .filter(r -> ((JsonObject)r.getValue()).getBoolean("show_in_menu", true))
                       .map(r -> r.getKey())
                       .sorted()
+//                      .sorted(Comparator.comparing(r -> r.getKey()))
+//                      .map(r -> new JsonObject().put(r.getKey(), r.getValue()))
                       .collect(Collectors.toList()));
 
+
       response.put("metrics", results);
+//      response.put("metrics", config.getJsonObject("metrics"));
 
       message.reply(response);
 

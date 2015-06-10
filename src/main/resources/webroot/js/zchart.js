@@ -38,6 +38,7 @@ var ZChart = function(name, dl, divName, type, color, interval)
   var ni = document.getElementById(divName);
   var newdiv = document.createElement('div');
   var divIdName = 'zchartContainer' + chartCount;
+  this.divName = divIdName;
   console.log("created chart: " + divIdName );
   newdiv.setAttribute('id', divIdName);
   // newdiv.setAttribute('class', "row");

@@ -8,18 +8,25 @@
     <script type="text/javascript" src="/js/zchart.js"></script>
     <script type="text/javascript">
 
+    /*
+    
+    VARIABLES
+
+    */
+
     // helper for mobile detection
     var ismobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 
+    // client version to announce to server
     var client_version = "v1.2.2";
-
-    // the current view objects
-    var charts = [];
-    var chartCount = 0; // chart c
+    var charts = []; // overview charts object
+    var chartCount = 0; // chart count
     var dataLength = 40; // default graph length
-    var refresh_rate = 1000/5;
+    var refresh_rate = 1000/5; // call render on flipclock and charts at this rate.
     var chart_interval = 5; // the normal plot interval
+    var show_legend = true;
 
+    // if desktop, set the default chart height dynamically else fix it for mobile!
     if (!ismobile) {
         var chart_height = window.innerHeight/3 + 'px'; // the chart height, cant use % here. :/
     } else {
@@ -30,8 +37,7 @@
     var hide_counter_first_sample = false; // for "counters", hide the initial spike when refreshing view.
     var chart_type = "stackedColumn"; // the chart_type to use ( canvasjs )
 
-
-    // what chart type divs exist in BODY
+    // what chart type divs exist in body, these are referenced by config
     var chart_divs = [
         "charts",
         "bigcharts",
@@ -39,6 +45,19 @@
         "smallcharts-2",
         "smallcharts-3"
     ]
+
+
+    // view data
+    var view_data;
+    // set the initial data object name to the "default" vpn.
+    var active_view = "default";
+
+
+    /*
+
+    METHODS
+
+    */
 
 
     // percent of events to log to console
@@ -64,17 +83,20 @@
         var tmpDate = new Date();
         logging = chance_of_logging;
 
-        var data = msg.data['rpc-reply'].rpc.show.queue.queues.queue;
+        // var data = msg.data['rpc-reply'].rpc.show.queue.queues.queue;
 
-        // 30 % change of logging
+        var data = data_shifter(msg.data, msg.config['data_path'], logging );
+
         if (logging) {
-            console.log("queues");
+            console.log("queues_handler: ");
             console.log(msg);
         }
 
+
+        // for queue in data[]
         for (var i in data){
             if (charts[2].chart.options.data[i] == undefined) {
-                //console.log("creating initial element for " + data[i].name);
+                // console.log("queues_handler: creating initial element for " + data[i].name);
                 charts[2].chart.options.data.push(
                     {
                         type: chart_type,
@@ -93,7 +115,6 @@
                     charts[2].chart.options.data[i].dataPoints.push(dp);
 
                 } else {
-
                     var dp = {
                         "x": tmpDate,
                         "y": Math.ceil(data[i].info['num-messages-spooled'])
@@ -104,8 +125,6 @@
 
             }
         }
-
-
     }
 
 
@@ -125,7 +144,7 @@
         
         for (var i in data){
             if (charts[0].chart.options.data[i] == undefined) {
-                console.log("creating initial element for " + data[i].name);
+                console.log("vpns_handler: creating initial element for " + data[i].name);
                 charts[0].chart.options.data.push(
                     {
                         type: chart_type,
@@ -185,23 +204,29 @@
 
     // rudimentary UUID generator in javascript
     function guid() {
+
       function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
           .toString(16)
           .substring(1);
+
       }
+
       return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
         s4() + '-' + s4() + s4() + s4();
+
     }
+
 
     // create a uuid 
     var uuid = guid();
 
 
-
     // message rate
     var target_rate;
     var current_rate;
+
+    // states
     var popup = false; // is the popup showing
     var show_alarms = true; // initial show_alarms MUST be true, else icon will be out of sync
 
@@ -211,23 +236,31 @@
   
     </script>
 
-    <!-- vpn stats handler -->
-    <script src="/js/vpn-stats-handler.js"></script>
+    <!-- generic view handler and setter -->
+    <script src="/js/generic-view-handler.js"></script>
 
     <!-- helpers -->
     <script src="/js/helpers.js"></script>
+
+    <!-- flipclock data handler -->
     <script src="/js/generic-stats.js"></script>
 
+    <!-- deps -->
     <script src="/js/jquery.js"></script>
     <script src="/js/canvasjs.js"></script>
     <script src="/js/flipclock.js"></script>
+
+    <!-- css -->
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/css/materialize.min.css">
     <link rel="stylesheet" href="/css/materialize.min.css">
     <link rel="stylesheet" href="/css/flipclock.css">
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/js/materialize.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/sockjs-client/0.3.4/sockjs.min.js"></script>
+
+    <!-- vertx eventbus -->
     <script src="/js/vertx.js"></script>
 
+    <!-- initial state overview -->
     <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
 
@@ -294,9 +327,9 @@
             //     //console.log("list-vpns:");
             //     //console.log(msg);
 
-            //     // if vpn_data is undefined, populate it
-            //     if (vpn_data == undefined) {
-            //         vpn_data = [];
+            //     // if view_data is undefined, populate it
+            //     if (view_data == undefined) {
+            //         view_data = [];
             //         console.log("init list-vpns reply:");
             //         var data = msg['rpc-reply'].rpc.show['message-vpn'].vpn;
             //         console.log(data);
@@ -304,8 +337,8 @@
             //             var c = {
             //                 "name": data[i].name,
             //             }
-            //             console.log("registering vpn_data key: " + data[i].name);
-            //             vpn_data[data[i].name] = c
+            //             console.log("registering view_data key: " + data[i].name);
+            //             view_data[data[i].name] = c
                         
             //             // register UI
             //             var node = document.getElementById('vpns');
@@ -314,7 +347,7 @@
             //             newlink = document.createElement('a');
             //             newlink.setAttribute('href', "#!");
             //             newlink.setAttribute('class', 'waves-effect waves-teal');
-            //             newlink.setAttribute('onclick', "set_view_vpn('" +data[i].name + "')");
+            //             newlink.setAttribute('onclick', "set_view('" +data[i].name + "')");
             //             newlink.innerHTML=data[i].name;
             //             entry.appendChild(newlink);
             //             node.appendChild(entry);
@@ -325,6 +358,9 @@
 
             
             eb.send("request-config", "please", function(msg) {
+
+                console.log("request-config: processing reply:");
+                console.log(msg);
 
                 // clean menu
                 var list = document.getElementById('metrics-dropdown');
@@ -337,32 +373,35 @@
                 newlink = document.createElement('a');
                 newlink.setAttribute('href', "#!");
                 newlink.setAttribute('class', 'waves-effect waves-teal');
-                newlink.setAttribute('onclick', "location.reload()");
+                newlink.setAttribute('onclick', "set_view('default')");
                 newlink.innerHTML="Overview";
                 entry.appendChild(newlink);
                 list.appendChild(entry);
 
-                // check if vpn_data is undefined ( reconnect condition )
-                if (vpn_data == undefined) {
-                    vpn_data = [];
+
+                // check if view_data is undefined ( reconnect condition )
+                if (view_data == undefined) {
+                    view_data = [];
                     for (metric in msg.metrics) {
                         console.log("registering metric config: " + msg.metrics[metric]);
                         var c = {
                              "name": msg.metrics[metric]
                          }
-                         vpn_data[msg.metrics[metric]] = c
+                         view_data[msg.metrics[metric]] = c
                     }
                 }
 
+
+                //
                 for (metric in msg.metrics) {
 
                         // if a metric is missing
-                        if ( vpn_data[msg.metrics[metric]] == undefined ) {
+                        if ( view_data[msg.metrics[metric]] == undefined ) {
                             app_status("Registering Metric: " + msg.metrics[metric] );
                             var c = {
                              "name": msg.metrics[metric]
                             }
-                            vpn_data[msg.metrics[metric]] = c
+                            view_data[msg.metrics[metric]] = c
                         }
 
 
@@ -372,7 +411,7 @@
                         newlink = document.createElement('a');
                         newlink.setAttribute('href', "#!");
                         newlink.setAttribute('class', 'waves-effect waves-teal');
-                        newlink.setAttribute('onclick', "set_view_vpn('" + msg.metrics[metric] + "')");
+                        newlink.setAttribute('onclick', "set_view('" + msg.metrics[metric] + "')");
                         newlink.innerHTML=msg.metrics[metric];
                         entry.appendChild(newlink);
                         node.appendChild(entry);
@@ -474,14 +513,14 @@
             })
 
             eb.registerHandler("memory", function (msg) {
-                console.log("memory");
-                console.log(msg);
+
+
             })
 
-            // if this is a reconnect, call set_view_vpn to resubscribe, else just ignore it.
-            if (vpn_data_active_topic != "default") {
+            // if this is a reconnect, call set_view to resubscribe, else just ignore it.
+            if (active_view != "default") {
 
-                set_view_vpn(vpn_data_active_topic);
+                set_view(active_view);
             }
 
         };
@@ -525,22 +564,28 @@
 
                 <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="mdi-action-assessment" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>
 
-
                 <!-- Settings  -->
                 <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='settings-dropdown'><i class="mdi-action-settings-applications" data-position="bottom" data-delay="50" data-tooltip="Settings"></i></a></li>
 
+                <!-- chart Type  -->
+                <li><a class='dropdown-button' data-beloworigin="true" href='#' data-activates='chart-type-dropdown'><i class="mdi-action-settings-applications"></i></a></li>
 
                 <li><a class='button' onclick=toggle_alarms()><i id="nav_alarms" class="mdi-action-alarm-on"></i></a></li>
 
 
                 <!-- menu vpn-->
                 <ul id='metrics-dropdown' class='dropdown-content z-depth-2'>
-                    <li><a href="#!" class='waves-effect waves-teal' onclick=location.reload()>Overview</a></li>
+                    <li><a href="#!" class='waves-effect waves-teal' onclick=set_view("default")>Overview</a></li>
                 </ul>
 
                 <!-- menu settings -->
                 <ul id='settings-dropdown' class='dropdown-content z-depth-2'>
                     <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_legend()>Legend</a></li>
+                </ul>
+
+
+                <ul id='chart-type-dropdown' class='dropdown-content z-depth-2'>
+                    <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_area()>Area</a></li>
                 </ul>
 
 
@@ -612,12 +657,6 @@
         </div>
     </div>
 </footer>
-
-
-
-
-
-
 
 
 
