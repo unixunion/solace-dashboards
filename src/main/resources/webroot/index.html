@@ -329,6 +329,11 @@
             }
 
 
+
+            // tell the user what's what
+            app_status("Registering Handlers");
+
+
             /*
              * Request Config from the EventBus
              *
@@ -395,6 +400,7 @@
                         // append to dropdown
                         dropdown.appendChild(entry);
 
+                        // request detail config per item, setup handlers
                         console.log("Request Config: " + msg.metrics[metric]);
                         eb.send("request-config", msg.metrics[metric], function(reply) {
                             console.log("Registering Handler: " + reply.topic);
@@ -405,16 +411,10 @@
                                 eb.registerHandler(reply.topic, window[reply.config.handler]);
                             }
                         })
-                    }
-
-
-                    
-                    
+                    }                
                 
             });
 
-            // tell the user what's what
-            app_status("Registering Handlers");
 
             // allows the server to send special commands to THIS client
             eb.registerHandler(uuid, function(msg) {
@@ -430,10 +430,11 @@
 
             // announce client to the server
             var t = {
-                    "version": client_version,
-                    "uuid": uuid
-                }
-                eb.send("newclient", t);
+                "version": client_version,
+                "uuid": uuid
+            }
+            eb.send("newclient", t);
+
 
             // periodic pings to server
             setInterval(function() {
@@ -445,26 +446,8 @@
             }, 10000);
 
 
-            // // generic stats handler is the flipclock
-            // eb.registerHandler("stats", generic_stats);
-
-            // // queue stats handler
-            // eb.registerHandler("queues", queues_handler);
-
-            // // handler for vpns
-            // eb.registerHandler("vpns", vpns_handler);
-
-            // eb.registerHandler("events", view_handler);
-
-            // eb.registerHandler("redundancy", redundancy_handler);
-
-            // eb.registerHandler("alarm", alarms_handler);
-
-            // eb.registerHandler("memory", view_handler)
-
             // if this is a reconnect, call set_view to resubscribe, else just ignore it.
             if (active_view != "default") {
-
                 set_view(active_view);
             }
 
