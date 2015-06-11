@@ -29,7 +29,7 @@ var ZChart = function(name, dl, divName, type, color, interval)
 
   // interval
   if (interval == undefined) {
-    this.interval = null;
+    this.interval = 5000;
   } else {
     this.interval = interval;
   }

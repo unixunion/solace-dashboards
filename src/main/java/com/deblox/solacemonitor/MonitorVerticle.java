@@ -95,7 +95,7 @@ public class MonitorVerticle extends AbstractVerticle {
 
       String req = message.body().toString();
 
-      logger.info("config request for: " + req );
+      logger.debug("config request for: " + req );
 
       JsonObject response = new JsonObject();
 
@@ -114,7 +114,7 @@ public class MonitorVerticle extends AbstractVerticle {
         // get a specific metric's config
         response = config.getJsonObject("metrics").getJsonObject(req);
         response.put("topic", req);
-        logger.info(response.toString());
+        logger.debug(response.toString());
 
       }
 
