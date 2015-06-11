@@ -1,0 +1,16 @@
+<rpc-reply semp-version="soltr/6_0">
+    <rpc>
+        <show>
+            <alarm>
+                <alarms>
+                    <alarm>
+                        <source>ADB MSP</source>
+                        <slot-number>1/4</slot-number>
+                        <message>HARDWARE Soft Error Detected</message>
+                    </alarm>
+                </alarms>
+            </alarm>
+        </show>
+    </rpc>
+    <execute-result code="ok"/>
+</rpc-reply>
