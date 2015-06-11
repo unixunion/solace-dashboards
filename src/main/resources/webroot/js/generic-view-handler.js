@@ -138,6 +138,13 @@
                         }
                     );
                 }
+
+                // hide this if its not needed
+                if (active_view != msg.topic) {
+                    hide_view(view_data[msg.topic])
+                }
+
+
             }
 
             var data_path = view_format[chart_config].data_path;
@@ -208,6 +215,7 @@
                 
             
 
+
                 plot_data(view_data[msg.topic].charts[chart_config], e, tmp_results, tmpDate);
 
                 
@@ -221,6 +229,36 @@
     }
 
 
+
+    var hide_view = function(view) {
+        // hide view
+        for (chart in view.charts) {
+            console.log("hiding view chart: " + chart);
+            try {
+                var d = document.getElementById(view.charts[chart].divName);
+                d.setAttribute("class", "hide");
+            } catch (err) {
+                console.log("unable hide div in view: " + active_view);
+            }
+        }
+    }
+
+
+    var show_view = function(view) {
+        // hide view
+        for (chart in view.charts) {
+            console.log("hiding view chart: " + chart);
+            try {
+                var d = document.getElementById(view.charts[chart].divName);
+                d.removeAttribute("class");
+            } catch (err) {
+                console.log("unable hide div in view: " + active_view);
+            }
+        }
+    }
+
+
+
     // set the view
     var set_view = function(msg) {
 
@@ -232,16 +270,18 @@
 
             if (msg == "default") {
 
+                hide_view(view_data[active_view]);
+
                 // hide view
-                for (chart in view_data[active_view].charts) {
-                    console.log("hiding view chart: " + chart);
-                    try {
-                        var d = document.getElementById(view_data[active_view].charts[chart].divName);
-                        d.setAttribute("class", "hide");
-                    } catch (err) {
-                        console.log("unable hide div in view: " + active_view);
-                    }
-                }
+                // for (chart in view_data[active_view].charts) {
+                //     console.log("hiding view chart: " + chart);
+                //     try {
+                //         var d = document.getElementById(view_data[active_view].charts[chart].divName);
+                //         d.setAttribute("class", "hide");
+                //     } catch (err) {
+                //         console.log("unable hide div in view: " + active_view);
+                //     }
+                // }
 
                 // show default
                 for (chart in charts) {
@@ -271,44 +311,50 @@
                    
                 }
 
+
+                show_view(view_data[msg]);
                 // show view
-                console.log("show view_data");
-                for (chart in view_data[msg].charts) {
-                    console.log("showing view: " + chart);
-                    try {
-                        var d = document.getElementById(view_data[msg].charts[chart].divName);
-                        d.removeAttribute("class");
-                    } catch (err) {
-                        console.log("unable show div in view: " + msg);
-                    }
+                // console.log("show view_data");
+                // for (chart in view_data[msg].charts) {
+                //     console.log("showing view: " + chart);
+                //     try {
+                //         var d = document.getElementById(view_data[msg].charts[chart].divName);
+                //         d.removeAttribute("class");
+                //     } catch (err) {
+                //         console.log("unable show div in view: " + msg);
+                //     }
                     
-                }
+                // }
 
             } else {
                 console.log("show view " + msg + " hide view " + active_view);
 
-                // hide view
-                for (chart in view_data[active_view].charts) {
-                    console.log("hiding view chart: " + chart);
-                    try {
-                        var d = document.getElementById(view_data[active_view].charts[chart].divName);
-                        d.setAttribute("class", "hide");
-                    } catch (err) {
-                        console.log("unable hide div in view: " + active_view);
-                    }
-                }
+                hide_view(view_data[active_view]);
 
+                // hide view
+                // for (chart in view_data[active_view].charts) {
+                //     console.log("hiding view chart: " + chart);
+                //     try {
+                //         var d = document.getElementById(view_data[active_view].charts[chart].divName);
+                //         d.setAttribute("class", "hide");
+                //     } catch (err) {
+                //         console.log("unable hide div in view: " + active_view);
+                //     }
+                // }
+
+
+                show_view(view_data[msg]);
                 // show default
-                for (chart in view_data[msg].charts) {
-                    console.log("showing view: " + chart);
-                    try {
-                        var d = document.getElementById(view_data[msg].charts[chart].divName);
-                        d.removeAttribute("class");
-                    } catch (err) {
-                        console.log("unable show div in view: " + msg);
-                    }
+                // for (chart in view_data[msg].charts) {
+                //     console.log("showing view: " + chart);
+                //     try {
+                //         var d = document.getElementById(view_data[msg].charts[chart].divName);
+                //         d.removeAttribute("class");
+                //     } catch (err) {
+                //         console.log("unable show div in view: " + msg);
+                //     }
                     
-                }
+                // }
 
             }
             
@@ -345,8 +391,7 @@
             
             // unregister and register the new topic
             console.log("registering handler view_handler for: " + msg);
-            //eb.unregisterHandler(active_view, view_handler);
-            eb.registerHandler(msg, view_handler);
+//            eb.registerHandler(msg, view_handler);
             active_view = msg;
 
             // set the VPN name in the NavBar
@@ -364,8 +409,8 @@
             
         } else {
             app_status("you're already there, resubscribing");
-            eb.unregisterHandler(active_view, view_handler);
-            eb.registerHandler(msg, view_handler);
+//            eb.unregisterHandler(active_view, view_handler);
+//            eb.registerHandler(msg, view_handler);
         }
 
         

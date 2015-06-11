@@ -1,7 +1,6 @@
 package com.deblox.solacemonitor.unit.test;
 
-import com.deblox.solacemonitor.SolaceMonitorVerticle;
-import io.vertx.core.DeploymentOptions;
+import com.deblox.solacemonitor.MonitorVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.unit.Async;
@@ -42,7 +41,7 @@ public class MyJUnitTest {
   public void test2(TestContext test) {
     // Deploy and undeploy a verticle
     Async async = test.async();
-    vertx.deployVerticle(SolaceMonitorVerticle.class.getName(), res -> {
+    vertx.deployVerticle(MonitorVerticle.class.getName(), res -> {
       if (res.succeeded()) {
         String deploymentID = res.result();
         vertx.undeploy(deploymentID, res2 -> {

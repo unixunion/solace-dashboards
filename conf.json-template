@@ -1,26 +1,40 @@
 // config options per service are as per: DeployOptions.java
 {
   "environment": "root",
-  "services": ["com.deblox.solacemonitor.SolaceMonitorVerticle", "com.deblox.server.Server"],
-  "com.deblox.solacemonitor.SolaceMonitorVerticle": {
+  "services": ["com.deblox.solacemonitor.MonitorVerticle", "com.deblox.server.Server"],
+  "com.deblox.solacemonitor.MonitorVerticle": {
     "config": {
       "version": "v1.2.2",
       "host": "solace",
       "username": "read_only_user",
       "password": "password",
+      "uri": "/SEMP",
+      "method": "GET",
       "metrics": {
+        "redundancy": {
+          "request": "<rpc semp-version=\"soltr/6_0\"><show><redundancy><detail/></redundancy></show></rpc>",
+          "interval": 10000,
+          "config": {
+            "data_path": "rpc-reply.rpc.show.redundancy",
+            "view": "redundancy",
+            "handler": "redundancy_handler"
+          }
+        },
         "events": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><log><event><find/><search-string>HIGH</search-string></event></log></show></rpc>",
           "interval": 15000,
           "config": {
-            "data_path": "rpc-reply.rpc.show.alarm.alarms"
+            "data_path": "rpc-reply.rpc.show.log.event.log-entry",
+            "view": "events",
+            "handler": "events_handler"
           }
         },
         "alarm": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><alarm></alarm></show></rpc>",
-          "interval": 5000,
+          "interval": 1000,
           "config": {
-            "data_path": "rpc-reply.rpc.show.alarm.alarms"
+            "data_path": "rpc-reply.rpc.show.alarm.alarms",
+            "handler": "alarms_handler"
           }
         },
         "memory": {
@@ -34,7 +48,8 @@
           "request": "<rpc semp-version=\"soltr/6_0\"><show><stats><client></client></stats></show></rpc>",
           "interval": 5000,
           "config": {
-            "data_path": "rpc-reply.rpc.show.stats.client.global.stats"
+            "data_path": "rpc-reply.rpc.show.stats.client.global.stats",
+            "handler": "generic_stats"
           }
         },
         "vpns": {
@@ -42,7 +57,8 @@
           "interval": 5000,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn",
-            "view": "implement some view mechanism to filter what the view should show / hide"
+            "view": "implement some view mechanism to filter what the view should show / hide",
+            "handler": "vpns_handler"
           }
         },
         "queues": {
@@ -50,12 +66,14 @@
           "interval": 5000,
           "config": {
             "data_path": "rpc-reply.rpc.show.queue.queues.queue",
-            "view": "generic_queue_stats"
+            "view": "generic_queue_stats",
+            "handler": "queues_handler"
           }
         },
         "list-vpns": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>*</vpn-name></message-vpn></show></rpc>",
-          "interval": 0
+          "interval": 0,
+          "config": {}
         },
         "Default": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>default</vpn-name><stats></stats></message-vpn></show></rpc>",

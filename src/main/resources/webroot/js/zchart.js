@@ -29,7 +29,7 @@ var ZChart = function(name, dl, divName, type, color, interval)
 
   // interval
   if (interval == undefined) {
-    this.interval = 5000;
+    this.interval = null;
   } else {
     this.interval = interval;
   }
@@ -52,36 +52,49 @@ var ZChart = function(name, dl, divName, type, color, interval)
     app_error("Div: " + divName + " doesnt' exist");
   }
   
-  
-  // divider
-  // var divider = document.createElement('div');
-  // divider.setAttribute('class', 'divider');
-  // ni.appendChild(divider);
+  this.is_visible = function() {
+    var d = document.getElementById(this.divName).getAttribute("class");
+    if (d == "hide") {
+      return false;
+    } else {
+      return true;
+    }
+
+  }
   
   this.chart = new CanvasJS.Chart("zchartContainer" + chartCount,
   {
-//    animationEnabled: true,
-//    exportEnabled: true,
-//    exportFileName: this.name,
+    // animationEnabled: true,
+    exportEnabled: false,
+    exportFileName: this.name,
     colorSet:  "customColorSet1",
     interactivityEnabled: ! ismobile,
 
 		title :{
 			text: this.name
 		},
+
     axisX: {
       valueFormatString: this.valueFormatString,
       labelFontSize: 8,
       labelAngle: 50,
       interval: interval,
       intervalType: "second",
+      // lineThickness: 2,
     },
+
+    axisY: {
+      includeZero: true,
+    },
+
     legend:{
       fontSize: 12,
     },
+
     toolTip:{
     	content: "{name}: {y}"
     },
+
 		data: []
 	});
 
@@ -142,7 +155,11 @@ var ZChart = function(name, dl, divName, type, color, interval)
          self.dps.shift();
       }
 
-      self.chart.render();
+      if (self.is_visible()) {
+        self.chart.render();       
+      }
+
+      
 
   }
 

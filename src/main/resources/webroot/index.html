@@ -23,7 +23,7 @@
     var chartCount = 0; // chart count
     var dataLength = 40; // default graph length
     var refresh_rate = 1000/5; // call render on flipclock and charts at this rate.
-    var chart_interval = 5; // the normal plot interval
+    var chart_interval = null; // the normal plot interval, null = auto
     var show_legend = true;
 
     // if desktop, set the default chart height dynamically else fix it for mobile!
@@ -34,7 +34,7 @@
     }
 
     var min_spool_plot = 100; // minimun number of message required to make the queues graph in Overview
-    var hide_counter_first_sample = false; // for "counters", hide the initial spike when refreshing view.
+    var hide_counter_first_sample = true; // for "counters", hide the initial spike when refreshing view.
     var chart_type = "stackedColumn"; // the chart_type to use ( canvasjs )
 
     // what chart type divs exist in body, these are referenced by config
@@ -100,6 +100,7 @@
                 charts[2].chart.options.data.push(
                     {
                         type: chart_type,
+                        click: function(e){Materialize.toast("Fixme", 1000)},
                         dataPoints: [],
                         name: data[i].info['message-vpn'] + ":" + data[i].name
                     }
@@ -148,6 +149,7 @@
                 charts[0].chart.options.data.push(
                     {
                         type: chart_type,
+                        click: function(e){Materialize.toast("Fixme", 1000)},
                         dataPoints: [],
                         name: data[i].name,
                         showInLegend: true
@@ -157,6 +159,7 @@
                 charts[1].chart.options.data.push(
                     {
                         type: chart_type,
+                        click: function(e){Materialize.toast("Fixme", 1000)},
                         dataPoints: [],
                         name: data[i].name,
                         showInLegend: true
@@ -236,8 +239,11 @@
   
     </script>
 
-    <!-- generic view handler and setter -->
+    <!-- handlers -->
     <script src="/js/generic-view-handler.js"></script>
+    <script src="/js/redundancy_handler.js"></script>
+    <script src="/js/alarms_handler.js"></script>
+    <script src="/js/events_handler.js"></script>
 
     <!-- helpers -->
     <script src="/js/helpers.js"></script>
@@ -322,42 +328,12 @@
             }
 
 
-            // // request list of VPN, and prime the vpn_charts object
-            // eb.send("request-metrics", "list-vpns", function(msg) {
-            //     //console.log("list-vpns:");
-            //     //console.log(msg);
-
-            //     // if view_data is undefined, populate it
-            //     if (view_data == undefined) {
-            //         view_data = [];
-            //         console.log("init list-vpns reply:");
-            //         var data = msg['rpc-reply'].rpc.show['message-vpn'].vpn;
-            //         console.log(data);
-            //         for (var i in data) {
-            //             var c = {
-            //                 "name": data[i].name,
-            //             }
-            //             console.log("registering view_data key: " + data[i].name);
-            //             view_data[data[i].name] = c
-                        
-            //             // register UI
-            //             var node = document.getElementById('vpns');
-            //             var entry = document.createElement('li');
-                        
-            //             newlink = document.createElement('a');
-            //             newlink.setAttribute('href', "#!");
-            //             newlink.setAttribute('class', 'waves-effect waves-teal');
-            //             newlink.setAttribute('onclick', "set_view('" +data[i].name + "')");
-            //             newlink.innerHTML=data[i].name;
-            //             entry.appendChild(newlink);
-            //             node.appendChild(entry);
-                        
-            //         }
-            //     }
-            // });
-
-            
-            eb.send("request-config", "please", function(msg) {
+            /*
+             * Request Config from the EventBus
+             *
+             *
+             */
+            eb.send("request-config", "all", function(msg) {
 
                 console.log("request-config: processing reply:");
                 console.log(msg);
@@ -391,35 +367,52 @@
                     }
                 }
 
+                // get the dropdown to append content to
+                var dropdown = document.getElementById('metrics-dropdown');
 
-                //
+                // add each metric to the menu
                 for (metric in msg.metrics) {
 
-                        // if a metric is missing
+                        // if a metric is missing ( server restart with new config condition )
                         if ( view_data[msg.metrics[metric]] == undefined ) {
-                            app_status("Registering Metric: " + msg.metrics[metric] );
+                            app_status("New Metric: " + msg.metrics[metric] );
                             var c = {
                              "name": msg.metrics[metric]
                             }
                             view_data[msg.metrics[metric]] = c
                         }
 
-
-                        var node = document.getElementById('metrics-dropdown');
+                        // create the button
                         var entry = document.createElement('li');
-                        
                         newlink = document.createElement('a');
                         newlink.setAttribute('href', "#!");
                         newlink.setAttribute('class', 'waves-effect waves-teal');
                         newlink.setAttribute('onclick', "set_view('" + msg.metrics[metric] + "')");
                         newlink.innerHTML=msg.metrics[metric];
                         entry.appendChild(newlink);
-                        node.appendChild(entry);
+
+                        // append to dropdown
+                        dropdown.appendChild(entry);
+
+                        console.log("Request Config: " + msg.metrics[metric]);
+                        eb.send("request-config", msg.metrics[metric], function(reply) {
+                            console.log("Registering Handler: " + reply.topic);
+                            console.log(reply);
+                            if (reply.config.handler == undefined) {
+                                eb.registerHandler(reply.topic, view_handler);
+                            } else {
+                                eb.registerHandler(reply.topic, window[reply.config.handler]);
+                            }
+                        })
                     }
+
+
+                    
+                    
                 
             });
 
-            // tell the user whats what
+            // tell the user what's what
             app_status("Registering Handlers");
 
             // allows the server to send special commands to THIS client
@@ -451,73 +444,22 @@
             }, 10000);
 
 
-            // generic stats handler is the flipclock
-            eb.registerHandler("stats", generic_stats);
+            // // generic stats handler is the flipclock
+            // eb.registerHandler("stats", generic_stats);
 
-            // queue stats handler
-            eb.registerHandler("queues", queues_handler);
+            // // queue stats handler
+            // eb.registerHandler("queues", queues_handler);
 
-            // handler for vpns
-            eb.registerHandler("vpns", vpns_handler);
+            // // handler for vpns
+            // eb.registerHandler("vpns", vpns_handler);
 
-            eb.registerHandler("events", view_handler);
+            // eb.registerHandler("events", view_handler);
 
-            eb.registerHandler("alarm", function (msg) {
-                var d = data_shifter(msg.data, msg.config['data_path'], true)
+            // eb.registerHandler("redundancy", redundancy_handler);
 
-                var node = document.getElementById('alarmscollection');
-                while (node.hasChildNodes()) {   
-                        node.removeChild(node.firstChild);
-                }
+            // eb.registerHandler("alarm", alarms_handler);
 
-                if ( d != undefined ) {
-
-                    var found_alarm = false;
-
-                    for (alarm in d) {
-
-                        var a = document.createElement('li');
-                        a.setAttribute('class', "collection-item avatar");
-
-                        var icon = document.createElement('i')
-                        icon.setAttribute('class', 'mdi-alert-warning circle');
-                        a.appendChild(icon);
-
-                        var title = document.createElement('span');
-                        title.setAttribute('class', 'title');
-                        title.innerHTML = d[alarm]['message'];
-                        a.appendChild(title);
-
-                        for (k in d[alarm]) {
-                            if (k != "message") {
-                                var desc = document.createElement('p');
-                                desc.innerHTML = k + ":" + d[alarm][k];
-                                a.appendChild(desc);
-                                node.appendChild(a);
-                                found_alarm = true;
-                            }
-                        }
-                                       
-                    }
-
-                    if (found_alarm && show_alarms) {
-                        $('#alarmmodal').openModal();
-                        setTimeout($('#alarmmodal').closeModal, 1000);
-                    } else {
-                        console.log("thought I did, but I didnt find a alarm");
-                    }
-
-                }
-
-
-
-
-            })
-
-            eb.registerHandler("memory", function (msg) {
-
-
-            })
+            // eb.registerHandler("memory", view_handler)
 
             // if this is a reconnect, call set_view to resubscribe, else just ignore it.
             if (active_view != "default") {
@@ -630,7 +572,8 @@
     <!-- </canvas> -->
 </div>
 
-<div id="alarmmodal" class="modal bottom-sheet">
+<!-- bottom-sheet  -->
+<div id="alarmmodal" class="modal red accent-4 z-depth-4">
     <h4>Alarms</h4>
     <ul id="alarmscollection" class="collection"></ul>
 </div>

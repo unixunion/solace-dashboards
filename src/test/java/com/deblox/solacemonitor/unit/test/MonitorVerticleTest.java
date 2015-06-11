@@ -2,7 +2,6 @@ package com.deblox.solacemonitor.unit.test;
 
 import com.deblox.Boot;
 import com.deblox.Util;
-import com.deblox.solacemonitor.SolaceMonitorVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -24,12 +23,12 @@ import org.junit.runner.RunWith;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 @RunWith(VertxUnitRunner.class)
-public class SolaceMonitorVerticleTest {
+public class MonitorVerticleTest {
 
   Vertx vertx;
   EventBus eb;
   JsonObject config;
-  private static final Logger logger = LoggerFactory.getLogger(SolaceMonitorVerticleTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(MonitorVerticleTest.class);
 
   @Before
   public void before(TestContext context) {

@@ -76,6 +76,9 @@
     */
     var data_shifter = function(data_object, data_path, logging) {
 
+        // force silence!
+        // logging=false;
+
         if (logging) {
             console.log("data_shifter: before shift ");
             console.log(data_object);

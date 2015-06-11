@@ -20,16 +20,17 @@ repositories {
         url = 'http://oss.sonatype.org/content/repositories/snapshots/'
     }
     mavenCentral()
+//    mavenLocal()
 }
 
 dependencies {
     compile "io.vertx:vertx-core:$vertxVersion"
     compile "io.vertx:vertx-web:$vertxVersion"
-    compile "io.vertx:vertx-ext:13-SNAPSHOT"
+    compile "io.vertx:vertx-ext:14-SNAPSHOT"
     compile "ch.qos.logback:logback-classic:$logbackVersion"
     compile "net.sourceforge.argparse4j:argparse4j:$argparseVersion"
     compile "com.google.code.gson:gson:$gsonVersion"
-    compile "javax.jms:jms:1.1"
+//    compile "javax.jms:jms:1.1"
 //    compile files("sol-jms")
 //    compile files('sol-jms-6.0.0.146.jar')
 //    compile files('j2ee.jar')
