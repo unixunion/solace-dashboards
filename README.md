@@ -62,20 +62,20 @@ turn them into something plotable. the handlers are currently:
 
 core metrics are 'stats', 'queues' and 'vpns', these MUST always be present since they control aspects of the default view.
 
-#### stats
+#### metric stats
 
 stats are total rate information for the appliance.
 
-#### vpns
+#### metric vpns
 
 vpns populates the rate-per-vpn graph on default view. You can limit this down to a few VPNS by replacing the * in the request with a suitable filter.
 
-#### queues
+#### metric queues
 
 queues populates the spool usage per-queue graph on the Overview page.
 
 
-#### vpn dahboards
+#### vpn dashboards
 
 for each vpn you want to create a dashboard for, you need to create a "metric" definition. e.g.
 
@@ -90,7 +90,8 @@ for each vpn you want to create a dashboard for, you need to create a "metric" d
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_vpn_stats"
+            "view": "generic_vpn_stats",
+            "handler": "generic_handler"
           }
         },
         "Some Other VPN": {
@@ -99,7 +100,8 @@ for each vpn you want to create a dashboard for, you need to create a "metric" d
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_vpn_stats"
+            "view": "generic_vpn_stats",
+            "handler": "generic_handler"
           }
         }
       }
@@ -150,7 +152,7 @@ E.g.
               "ttl-exceeded"
             ],
             "counter": true,
-            "data_path": "ingress-discards", // the keys above are in this sub-field
+            "data_path": "ingress-discards", // the keys above are in this sub node in the JSON
             "div": "smallcharts-3",
             "chart_length": 10
           },
@@ -231,15 +233,10 @@ metrics defined in conf.json are polled by the server and broadcast to their res
 
 ## TODO
 
-* per-vpn graphs
-* cool stuff
-* metric response emitter pathing defined in config
 * switch frontend to something better
 * boot class "hot" redeploy of modules
 
 ## building
-
-copy solace libs into src/main/resources/platform_lib
 
 the gradle task *shadowJar* will build a executable jar
 
