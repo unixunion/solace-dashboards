@@ -63,7 +63,7 @@ shadowJar {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2.1'
+    gradleVersion = '2.4'
 }
 
 test.outputs.upToDateWhen { false }

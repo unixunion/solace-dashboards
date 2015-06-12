@@ -1,20 +1,22 @@
 // config options per service are as per: DeployOptions.java
 {
   "environment": "tests",
-  "services": ["com.deblox.solacemonitor.SolaceMonitorVerticle", "com.deblox.server.Server", "com.deblox.server.MockServer"],
+  "services": ["com.deblox.solacemonitor.MonitorVerticle", "com.deblox.server.Server", "com.deblox.server.MockServer"],
   "com.deblox.solacemonitor.SolaceEventVerticle": {
     "jndiProviderURL": "smf://solace1:55555",
     "username": "readonly_user",
     "password": "readonly_pass",
     "topicName": "#LOG/>"
   },
-  "com.deblox.solacemonitor.SolaceMonitorVerticle": {
+  "com.deblox.solacemonitor.MonitorVerticle": {
     "config": {
       "reloadClients": false,
       "host": "localhost",
       "port": 8081,
       "username": "someusername",
       "password": "somepassword",
+      "method": "GET",
+      "uri": "/SEMP",
       "metrics": {
         "redundancy": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><redundancy><detail/></redundancy></show></rpc>",
@@ -36,7 +38,7 @@
         },
         "alarm": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><alarm></alarm></show></rpc>",
-          "interval": 1000,
+          "interval": 15000,
           "config": {
             "data_path": "rpc-reply.rpc.show.alarm.alarms",
             "handler": "alarms_handler"
@@ -86,7 +88,7 @@
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_vpn_stats"
+            "view": "generic_handler"
           }
         },
         "vpn_5": {
@@ -95,7 +97,7 @@
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_vpn_stats"
+            "view": "generic_handler"
           }
         }
       },
@@ -194,7 +196,7 @@
   "com.deblox.server.MockServer": {
     "config": {
       "port": 8081,
-      "serverVerticle": "com.deblox.solacemonitor.SolaceMonitorVerticle",
+      "serverVerticle": "com.deblox.solacemonitor.MonitorVerticle",
       "serverConfig": "src/test/resources/conf.json"
     }
   }
