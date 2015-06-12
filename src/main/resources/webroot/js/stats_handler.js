@@ -7,7 +7,7 @@
     
     */
 
-    var generic_stats = function (msg) {
+    var stats_handler = function (msg) {
 
         var logging = chance_of_logging();
 

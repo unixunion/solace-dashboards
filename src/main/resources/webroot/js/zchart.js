@@ -1,4 +1,8 @@
-// My ZChart Class
+/*
+
+The chart class
+
+*/
 
 var ZChart = function(name, dl, divName, type, color, interval)
 {

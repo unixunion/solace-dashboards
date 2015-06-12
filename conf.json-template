@@ -49,7 +49,7 @@
           "interval": 5000,
           "config": {
             "data_path": "rpc-reply.rpc.show.stats.client.global.stats",
-            "handler": "generic_stats"
+            "handler": "stats_handler"
           }
         },
         "vpns": {
@@ -81,7 +81,8 @@
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_vpn_stats"
+            "view": "generic_vpn_stats",
+            "handler": "generic_handler"
           }
         },
         "My VPN": {

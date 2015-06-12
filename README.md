@@ -2,26 +2,32 @@
 
 realtime metrics for Solace
 
+## about
+
+solace-dashboard polls SEMP periodically for metrics as defined in config, then pushes those metrics over websocket to
+the webclients.
+
 ## features
 
-* configurable metrics gatherer
+* customizable metrics
 * websocket based html client
-* eventbus server serving metric requests
+* eventbus server responder for other VertX.io verticles
 * highly discernible colour schema
 
 ## implemented
 
 * individual vpn dashboards
 * overview stats
+* metric configuration for handlers, view_formatting
 
 ## roadmap
 
-* universal javascript metrics handler ( currently 3 individual handler )
-* universal data path hinting ( Array support, ... )
+* some degree of historical data
+* custom js injection into main templates
 
 ## configuring
 
-everything lives within conf.json, basically a metric is something you want to read from solace and put onto the eventbus.
+all config resides within conf.json, basically a metric is something you want to read from solace and put onto the eventbus.
 the HTML client subscribes to the eventbus for topics like "vpns", "stats", "queues" and "Some VPN Name" 
 
 a metric configuration contains:
@@ -30,19 +36,31 @@ a metric configuration contains:
 |--------|-----------|
 |request |XML request to POST to solace appliance|
 |interval|the interval in ms to request the metric from solace appliance and publish it onto vertx eventbus|
+|config  |specific metric's config|
 
-some metrics can have additional configs e.g.:
+the additional config options are:
 
 |Name|Description|
 |----|-----------|
 |data_path|path hinting to aid the client javascript to extract the neccesary data points.|
 |view|the name of the view|
+|handler|the javascript function name to call|
 
+### javascript note
 
+within src/main/resources/webroot you can find handler javascript files, handlers take the responses from the MonitorVerticle and
+turn them into something plotable. the handlers are currently:
+
+* alarms_handler.js
+* events_handler.js <- stub
+* generic_handler.js
+* redundancy_handler.js <- stub
+* stats_handler.js
+* vpns_handler.js
 
 ### metrics
 
-core metrics are 'stats', 'queues' and 'vpns', these MUST always be present since they control aspects of the Overview.
+core metrics are 'stats', 'queues' and 'vpns', these MUST always be present since they control aspects of the default view.
 
 #### stats
 
@@ -50,43 +68,12 @@ stats are total rate information for the appliance.
 
 #### vpns
 
-vpns populates the rate-per-vpn graph on Overview page. You can limit this down to a few VPNS by replacing the * in the request with a suitable filter. e.g. prod_* to supress default vpn and test-vpns. 
+vpns populates the rate-per-vpn graph on default view. You can limit this down to a few VPNS by replacing the * in the request with a suitable filter.
 
 #### queues
 
 queues populates the spool usage per-queue graph on the Overview page.
 
-
-```
-
-      "metrics": {
-        "stats": {
-          "request": "<rpc semp-version=\"soltr/6_0\"><show><stats><client></client></stats></show></rpc>",
-          "interval": 5000,
-          "config": {
-            "data_path": "rpc-reply.rpc.show.stats.client.global.stats"
-          }
-        },
-        "vpns": {
-          "request": "<rpc semp-version=\"soltr/6_0\"><show><message-vpn><vpn-name>*</vpn-name><stats></stats></message-vpn></show></rpc>",
-          "interval": 5000,
-          "config": {
-            "data_path": "rpc-reply.rpc.show.message-vpn.vpn"
-          }
-        },
-        "queues": {
-          "request": "<rpc semp-version=\"soltr/6_0\"><show><queue><name>*</name><vpn-name>*</vpn-name></queue></show></rpc>",
-          "interval": 5000,
-          "config": {
-            "data_path": "rpc-reply.rpc.show.queue.queues.queue",
-            "view": "generic_queue_stats"
-          }
-        },
-        ...
-        ...
-      }
-
-```
 
 #### vpn dahboards
 
@@ -216,10 +203,15 @@ E.g.
 ```
 
 
-
 ## client side
 
-entire responses from solace are transformed into JSON and sent to the client. Its Up to the client to dig through the data for points of interest. The view configs are sent along with the JSON document to the client to aid the client in this aspect.
+the client is a HTML websocket application, which will connect to the SolaceMonitor and then download the configuration
+from the server. for each metric defined it will register a handler and a menu item.
+
+the MonitorVerticle sends JSON transformed responses from to the client. the client then passes the message on to a 
+handler as defined in the metric configuration. the handler is tasked with digging through the data and storing it in
+the data arrays. the view configs are sent along with the solace response to the client to enable the client to plot
+the data as desired.
 
 see the index.html for layout of MaterializeCSS divs.
 

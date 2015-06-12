@@ -1,4 +1,12 @@
 
+    var chance_of_logging = function() {
+        if (Math.floor((Math.random() * 100) + 1) < logging_chance) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     var toggle_alarms = function() {
         show_alarms = ! show_alarms;
@@ -108,4 +116,37 @@
             return data_object;
 
         }
+    }
+
+
+    var plot_data = function(chartObject, metric, tmp_results, tmpDate) {
+
+        if (chartObject.counter) {
+           
+            var chart = chartObject.chart.options.data[metric].dataPoints;
+            
+            try {
+                var last_val = chartObject.chart.options.data[metric].dataPoints[chartObject.chart.options.data[metric].dataPoints.length-1].last_val;
+            } catch(err) {
+                console.log("no history, setting to current value for delta");
+                
+                if (hide_counter_first_sample) {
+                    var last_val = tmp_results;
+                } else {
+                    // If you want to see the initial SPIKE
+                    var last_val = 0;
+                }
+            }
+        } else {
+            var last_val = 0;
+        }
+
+        // push custom
+        var dp = {
+            "x": tmpDate,
+            "y": tmp_results - last_val,
+            "last_val": tmp_results
+        }
+
+        chartObject.chart.options.data[metric].dataPoints.push(dp);
     }

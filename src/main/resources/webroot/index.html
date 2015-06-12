@@ -47,7 +47,6 @@
         "smallcharts-3"
     ]
 
-
     // view data
     var view_data;
     // set the initial data object name to the "default" vpn.
@@ -59,8 +58,6 @@
     METHODS
 
     */
-
-
     // percent of events to log to console
     var chance_of_logging = function() {
         if (Math.floor((Math.random() * 100) + 1) < logging_chance) {
@@ -130,79 +127,7 @@
     }
 
 
-    // vpns handler
-    var vpns_handler = function (msg) {
 
-        logging = chance_of_logging;
-
-        var tmpDate = new Date();
-
-        var data = data_shifter(msg.data, msg.config['data_path'], logging);
-
-        if (logging) {
-            console.log("vpns_handler: ");
-            console.log(msg);
-        }
-        
-        for (var i in data){
-            if (charts[0].chart.options.data[i] == undefined) {
-                console.log("vpns_handler: creating initial element for " + data[i].name);
-                charts[0].chart.options.data.push(
-                    {
-                        type: chart_type,
-                        click: function(e){Materialize.toast("Click Handler", 1000)},
-                        dataPoints: [],
-                        name: data[i].name,
-                        showInLegend: true
-                    }
-                );
-
-                charts[1].chart.options.data.push(
-                    {
-                        type: chart_type,
-                        click: function(e){Materialize.toast("Fixme", 1000)},
-                        dataPoints: [],
-                        name: data[i].name,
-                        showInLegend: true
-                    }
-                );
-
-
-            } else {
-
-                // "y": data[i].stats['current-egress-rate-per-second'] + data[i].stats['current-ingress-rate-per-second']
-                var dp = {
-                    "x": tmpDate,
-                    "y": data[i].stats['average-egress-rate-per-minute'] + data[i].stats['average-ingress-rate-per-minute']
-                }
-                charts[0].chart.options.data[i].dataPoints.push(dp);
-                
-                var tmp_val = data[i].stats['egress-discards']['total-egress-discards'] + data[i].stats['ingress-discards']['total-ingress-discards'];
-
-                try {
-                    var last_val = charts[1].chart.options.data[i].dataPoints[charts[1].chart.options.data[i].dataPoints.length-1].last_val;
-                } catch(err) {
-                    // if no datapoints, set last_val to current val to kill of the HUGE spike in new graph creation
-                    if ( hide_counter_first_sample ) {
-                        var last_val = tmp_val;
-                    } else {
-                        var last_val = 0;
-                    }
-                    
-                }
-
-                var dp = {
-                    "x": tmpDate,
-                    "y": tmp_val - last_val,
-                    "last_val": tmp_val
-                }
-
-                charts[1].chart.options.data[i].dataPoints.push(dp);
-
-            }
-        }
-
-    }
 
 
 
@@ -221,10 +146,8 @@
 
     }
 
-
     // create a uuid 
     var uuid = guid();
-
 
     // message rate
     var target_rate;
@@ -241,16 +164,16 @@
     </script>
 
     <!-- handlers -->
-    <script src="/js/generic-view-handler.js"></script>
+    <script src="/js/view_controller.js"></script>
+    <script src="/js/vpns_handler.js"></script>
+    <script src="/js/generic_handler.js"></script>
     <script src="/js/redundancy_handler.js"></script>
     <script src="/js/alarms_handler.js"></script>
     <script src="/js/events_handler.js"></script>
+    <script src="/js/stats_handler.js"></script>
 
     <!-- helpers -->
     <script src="/js/helpers.js"></script>
-
-    <!-- flipclock data handler -->
-    <script src="/js/generic-stats.js"></script>
 
     <!-- deps -->
     <script src="/js/jquery.js"></script>
@@ -289,28 +212,15 @@
         charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "bigcharts", chart_type), chart_interval);
         charts[2].chart.options.data = []; // reset chart 0 first element overriding defaults
 
-
-        // $('#modal1').leanModal({
-        //   dismissible: false, // Modal can be dismissed by clicking outside of the modal
-        //   opacity: .5, // Opacity of modal background
-        //   in_duration: 300, // Transition in duration
-        //   out_duration: 200, // Transition out duration
-        //   ready: function() { app_status('Modal Ready'); }, // Callback for Modal open
-        //   complete: function() { app_status('Modal Complete'); } // Callback for Modal close
-        // });
-
-
         // connect to eventbus
         initialiseEventbus = function() {
 
             if (!popup) {
-                //$('#modal1').openModal();
-                popup = true;
-                // MODAL configure
-                
+                popup = true;              
                 $('#modal1').openModal()
             }
 
+            // if were connected kill the reconnector method
             if (eb != null && eb.readyState() == 1) {
                 clearInterval(reconnector);
                 return;
@@ -329,15 +239,14 @@
             }
 
 
-
             // tell the user what's what
             app_status("Registering Handlers");
 
 
             /*
              * Request Config from the EventBus
-             *
-             *
+             * 
+             * first gets a list of all metrics, then asks for each ones config in turn.
              */
             eb.send("request-config", "all", function(msg) {
 
@@ -406,7 +315,7 @@
                             console.log("Registering Handler: " + reply.topic);
                             console.log(reply);
                             if (reply.config.handler == undefined) {
-                                eb.registerHandler(reply.topic, view_handler);
+                                eb.registerHandler(reply.topic, generic_handler);
                             } else {
                                 eb.registerHandler(reply.topic, window[reply.config.handler]);
                             }
@@ -512,9 +421,6 @@
                 </ul>
 
 
-
-
-
             </ul>
         </div>
     </nav>
@@ -543,24 +449,24 @@
 
 
     <!-- Modal Structure -->
-<div id="modal1" class="modal">
+    <div id="modal1" class="modal">
 
-    <!-- <canvas id="canvas"> -->
-        <div class="modal-content">
-            <h4>Connection Lost</h4>
-            <p>reconnecting...</p>
-        </div>
-        <div class="progress">
-            <div class="indeterminate blue"></div>
-        </div>
-    <!-- </canvas> -->
-</div>
+        <!-- <canvas id="canvas"> -->
+            <div class="modal-content">
+                <h4>Connection Lost</h4>
+                <p>reconnecting...</p>
+            </div>
+            <div class="progress">
+                <div class="indeterminate blue"></div>
+            </div>
+        <!-- </canvas> -->
+    </div>
 
-<!-- bottom-sheet  -->
-<div id="alarmmodal" class="modal red accent-4 z-depth-4">
-    <h4>Alarms</h4>
-    <ul id="alarmscollection" class="collection"></ul>
-</div>
+    <!-- alarm modal, if you want ot on the bottom, add class bottom-sheet  -->
+    <div id="alarmmodal" class="modal red accent-4 z-depth-4">
+        <h4>Alarms</h4>
+        <ul id="alarmscollection" class="collection"></ul>
+    </div>
 
 </div>
 
@@ -575,14 +481,12 @@
 
 <footer class="sticky-footer blue hide-on-small-only">
     <div class="footer-copyright blue">
-        <div class="container blue">
+        <div class="container blue grey-text text-lighten-4">
             by Kegan Holtzhausen
             <a class="grey-text text-lighten-4 right" href="https://github.com/unixunion/solace-dashboards">Source</a>
         </div>
     </div>
 </footer>
-
-
 
 
 
@@ -607,9 +511,6 @@
             clock.setCounter(Math.ceil(current_rate/1000) + "K")
         }, refresh_rate);
     });
-
-
-
 
   
 </script>
