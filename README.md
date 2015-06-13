@@ -1,17 +1,18 @@
 # solace dashboards
 
-realtime metrics dashboards for Solace
+realtime metrics dashboards for Solace Messaging Appliances
+
+## about
+
+solace-dashboard server polls SEMP periodically for metrics as defined in config, then pushes those metrics over websocket to the HTML client dashboard application.
+
+## screenshots
 
 ![screenshot](https://raw.githubusercontent.com/unixunion/solace-dashboards/master/screenshots/Overview.png "Overview")
 
 ![vpn view](https://raw.githubusercontent.com/unixunion/solace-dashboards/master/screenshots/VPN%20View.png "VPN View")
 
 ![alarms](https://raw.githubusercontent.com/unixunion/solace-dashboards/master/screenshots/Alarm.png "Alarm")
-
-
-## about
-
-solace-dashboard polls SEMP periodically for metrics as defined in config, then pushes those metrics over websocket to the HTML client dashboard application.
 
 ## features
 
@@ -21,61 +22,147 @@ solace-dashboard polls SEMP periodically for metrics as defined in config, then 
 * graphs feature highly discernible colour schema
 * individual vpn dashboards
 * overview dashboard
+* MaterializeCSS UI
+* CanvasJS for graphing
 
 ## roadmap
 
 * some degree of historical data persistence
+* redundancy and events view
 * custom javascript rendering into webapp template
 * add top queues within a VPN to per-VPN dashboards
 * add a solace JMS subscriber for appliance generated events
 
 ## configuring
 
-all config resides within conf.json, basically a metric is something you want to read from solace and put onto the eventbus.
-the HTML client subscribes to the eventbus for topics like "vpns", "stats", "queues" and "Some VPN Name" 
+all configuring is dont through *conf.json*, basically a metric is something you want to read from solace and put onto the eventbus. the HTML client subscribes to the eventbus on topics like "vpns", "stats", "queues" and "Some VPN Name" 
 
-a metric configuration contains:
+a typical *metric* configuration contains:
 
 |Name    |Description|
 |--------|-----------|
-|request |XML request to POST to solace appliance|
-|interval|the interval in ms to request the metric from solace appliance and publish it onto vertx eventbus|
-|config  |specific metric's config|
+|request |request to POST to the appliance|
+|interval|the interval in *ms* to repeat requests and publish responses|
+|config |specific metric's config|
 
-the config options are:
+the *config* options are:
 
 |Name|Description|
-|----|-----------|
-|data_path|path hinting to aid the client javascript to extract the neccesary data points. its a dot-name-space which is iterated over and used to descend into the JSON|
+|----------|-----------|
+|data_path|path hinting to aid the client javascript to extract the neccesary data points. |
 |view|the name of the view|
-|handler|the javascript function name to call|
+|handler|the javascript function in the client that can handle the data and view|
 
-### javascript note
+### request
 
-within src/main/resources/webroot/js you can find handler javascript files, handlers take the responses from the MonitorVerticle and turn them into something plotable. the handlers are currently:
+the request is a string which is put into the request body.
 
-* alarms_handler.js
-* events_handler.js <- stub
-* generic_handler.js
-* redundancy_handler.js <- stub
-* stats_handler.js
-* vpns_handler.js
+e.g. `<rpc semp-version=\"soltr/6_0\"><show><alarm></alarm></show></rpc>`
 
-### metrics
+### interval
 
-core metrics are 'stats', 'queues' and 'vpns', these MUST always be present since they control aspects of the default view.
+millisecond interval to set the repeating timer for.
 
-#### metric stats
+### config
 
-stats are total rate information for the appliance.
+general config for the metric
 
-#### metric vpns
+#### data_path
 
-vpns populates the rate-per-vpn graph on default view. You can limit this down to a few VPNS by replacing the * in the request with a suitable filter.
+the data_path is a "." separated string of object id's within the JSON response . the HTML client uses this to reach the object which hold the keys and values of the desired metric. it is used by the various view handlers in conjunction with the shift_data javascript function in the client.
 
-#### metric queues
+e.g. `"rpc-reply.rpc.show.memory.physical-memory"`
 
-queues populates the spool usage on a per-queue graph on the default view a.k.a Overview view.
+you can determin the data_path for a request by just looking over the raw responses from the solace appliance. e.g.
+
+```sh
+$> curl -d "<rpc semp-version=\"soltr/6_0\"><show><memory></memory></show></rpc>" -u "ro_user:ro_pass" "http://solace/SEMP
+<rpc-reply semp-version="soltr/6_0">
+  <rpc>
+    <show>
+      <memory>
+        <physical-memory>
+          <memory-info>
+            <type>Memory</type>
+            <total-in-kb>16107540</total-in-kb>
+            <used-in-kb>5800592</used-in-kb>
+            <free-in-kb>10306948</free-in-kb>
+            <buffers-in-kb>70056</buffers-in-kb>
+            <cached-in-kb>697812</cached-in-kb>
+            ...
+            ...
+```
+#### view
+
+the view is the name of a view as defined in the *views* section of the config. 
+
+e.g. `"generic_vpn_stats"
+
+#### handler
+
+handler is the javascript function name in the HTML client which is capable of handling the particular response data. the javascript function needs to be imported in the *scripts* section of the index.html or similar mechanism.
+
+e.g. `"generic_handler"`
+
+##### handlers
+
+within src/main/resources/webroot/js you can find handler javascript files, handlers take the JSON-ified responses from the MonitorVerticle and turn them into something plotable.
+
+###### alarms_handler
+
+alarms handler is a special handler for reading alarm messages and triggering a MaterielizeCSS modal to display the alarms.
+
+###### events_handler
+
+under development.
+
+###### generic_handler
+
+the generic_handler is capable of plotting a **single** object's keys and values. by that I mean the `data_path` must refer to a object with keys and values and *NOT* an array of objects. 
+
+example json
+
+```
+"memory": {
+	"stats": {
+		"free": 999999999,
+		"used": 2132131231 ,
+		"other": {
+			"somekey": "somevalue"
+		}
+	}
+}
+```
+
+in the case above, using the *data_path* `memory.stats` would make free, used and other available to the handler. the view *specific* config in the views section can also access the `somekey` value by specifying an addition `data_path` in the view's config. 
+
+###### redundancy_handler
+
+under development.
+
+###### stats_handler
+
+currently only pulls the total msg's sent and received for use by the flipclock.
+
+###### vpns_handler
+
+the vpns handler slightly different to the *generic_handler* in that it CAN handle a Array object. 
+
+### core metrics
+
+core metrics named `stats`, `queues` and `vpns` **MUST** always be present since they control aspects of the default view.
+
+#### stats
+
+*stats* are total rate information for the appliance. this is currently only used by the flipclock.
+
+#### vpns
+
+*vpns* populates the rate-per-vpn graph on `default` view. these are stacked in the `Message Rate` graph to plot the total message rate.
+
+#### queues
+
+*queues* populates the spool usage per-queue graph on the `default` view. the variable `min_spool_plot` in index.html hides queues which dont have more than N msg's in the spool.
 
 #### vpn dashboards
 
@@ -110,94 +197,84 @@ for each vpn you want to create a dashboard for, you need to create a "metric" d
 
 ### views
 
-views control how information is extracted and displayed in the UI graphs, the view describes the graphs to the javascript client which runs in the browser. 
+views control what keys are extracted and graphed, the view describe the graphs to the javascript client which runs in the browser. 
 
-each "show" in config element refers to a item in the JSON document at location: *data_path* which was sent to the client.
+each *key* under `show` in the `config` element refers to a item in the JSON document at the *data_path*.
 
-view config example:
+each `view` object is used by the specified *handler* in the `metric` config, so the handler's could potentially have different view configs. the generic_handler accepts the following keys:
+
+* show
+* chart_type
+* div
+* chart_length
+* data_path
+
+#### show
+
+this is a JsonArray of key's whos values you want to plot. make sure that the values make sense on the same graph! 
+
+#### chart_type
+
+any of the supported chart_type arguments for canvasJs. examples are:
+
+* area
+* stackedColumn
+* stackedColumn100
+* stackedArea
+* stackedArea100
+* ...
+
+#### div
+
+the MaterializeCSS framework supports the standard 12-column system, index.html defines the following grid system.
+
+|           s12 / l8         | s12 / l4 |
+|------------------|------------|
+|bigcharts         |   charts  |
+
+| s12 / l4 | s12 / l4 | s12 / l4 |
+|---|---|---
+|smallcharts-1|smallcharts-2|smallcharts-3|
+
+#### chart_length
+
+the number of samples to store in chart's data map. if you want a dashboard time window of the last *6* minutes, and are publishing metrics every *5* seconds, then use this formula: 
+
+`(6 minutes * 60 seconds) / 5 seconds = 72 samples`
+
+#### data_path
+
+`data_path` at this level specifies additional objects to descend into in compliment to the data_path already used at a metric level. see the example below.
+
+#### example
+
+view config example showing how it all fits together.
 
 ```
       "views": {
-        "default": {},
+        "default": {}, // a view who's handlers dont accept view config.
         "generic_vpn_stats": {
-          "Message Rate": { // a human readable name
+          "Message Rate": { // a human readable name for the chart
             "show": [
-              "current-egress-rate-per-second", // items in to plot
+              "current-egress-rate-per-second",
               "current-ingress-rate-per-second"
             ],
             "chart_type": "stackedColumn", // canvasjs chartType
             "div": "smallcharts-1", // div to place the chart in
-            "chart_length": 20 // the chart length in samples / columns
-          },
-          "Message Byte Rate": {
-            "show": [
-              "average-egress-byte-rate-per-minute",
-              "average-ingress-byte-rate-per-minute"
-            ],
-            "chart_type": "stackedColumn",
-            "div": "smallcharts-2",
-            "chart_length": 20
+            "chart_length": 20 // the chart length in samples
           },
           "Ingress Discards": {
             "show": [
               "msg-spool-discards",
-              "msg-too-big",
-              "no-subscription-match",
-              "parse-error",
-              "publish-topic-acl",
-              "topic-parse-error",
               "ttl-exceeded"
             ],
-            "counter": true,
-            "data_path": "ingress-discards", // the keys above are this sub-key
+            "counter": true, // these are counters
+            "data_path": "ingress-discards", // the keys are in this sub object
             "div": "smallcharts-3",
             "chart_length": 10
           },
-          "Egress Discards": {
-            "show": [
-              "compression-congestion",
-              "message-elided",
-              "message-promotion-congestion",
-              "msg-spool-egress-discards",
-              "transmit-congestion"
-            ],
-            "counter": true,
-            "data_path": "egress-discards",
-            "div": "smallcharts-3",
-            "chart_length": 10
-          },
-          "Denies": {
-            "show": [
-              "denied-authorization-failed",
-              "denied-client-connect-acl",
-              "denied-duplicate-clients",
-              "denied-subscribe-permission",
-              "denied-subscribe-topic-acl",
-              "denied-unsubscribe-permission",
-              "denied-unsubscribe-topic-acl",
-              "denied-client-connect-acl"
-            ],
-            "counter": true,
-            "div": "smallcharts-1",
-            "chart_length": 40
-          },
-          "Errors": {
-            "show": [
-              "max-exceeded-msgs-sent",
-              "not-enough-space-msgs-sent",
-              "not-found-msgs-sent",
-              "parse-error-on-add-msgs-sent",
-              "parse-error-on-remote-msgs-sent",
-              "subscribe-client-not-found",
-              "unsubscribe-client-not-found",
-              "already-exists-msgs-sent"
-            ],
-            "counter": true,
-            "div": "smallcharts-2",
-            "chart_length": 40
-          }
-        }
-      }
+	  ...
+	  ...
   
 ```
 

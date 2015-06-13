@@ -91,7 +91,8 @@
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_handler"
+            "view": "generic_vpn_stats",
+            "handler": "generic_handler"
           }
         }
       },
