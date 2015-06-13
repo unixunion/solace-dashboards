@@ -4,7 +4,10 @@ realtime metrics dashboards for Solace
 
 ![screenshot](https://raw.githubusercontent.com/unixunion/solace-dashboards/master/screenshots/Overview.png "Overview")
 
+![vpn view](https://raw.githubusercontent.com/unixunion/solace-dashboards/master/screenshots/VPN%20View.png "VPN View")
+
 ![alarms](https://raw.githubusercontent.com/unixunion/solace-dashboards/master/screenshots/Alarm.png "Alarm")
+
 
 ## about
 
