@@ -2,6 +2,8 @@
 
 realtime metrics dashboards for Solace
 
+![screenshot](https://raw.githubusercontent.com/unixunion/solace-dashboards/master/screenshots/Overview.png "Overview")
+
 ## about
 
 solace-dashboard polls SEMP periodically for metrics as defined in config, then pushes those metrics over websocket to the HTML client dashboard application.
