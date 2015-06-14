@@ -54,7 +54,7 @@ configuration is done on a per-verticle level. to pass config to the MonitorVert
 
 ## metrics
 
-all configuring is dont through *conf.json*, basically a metric is something you want to read from solace and put onto the eventbus. the HTML client subscribes to the eventbus on topics like "vpns", "stats", "queues" and "Some VPN Name" 
+all configuring is done through *conf.json*, basically a metric is something you want to read from solace and put onto the eventbus. the HTML client subscribes to the eventbus on topics like "vpns", "stats", "queues" and "Some VPN Name" 
 
 a typical *metric* configuration contains:
 
