@@ -26,7 +26,7 @@ repositories {
 dependencies {
     compile "io.vertx:vertx-core:$vertxVersion"
     compile "io.vertx:vertx-web:$vertxVersion"
-    compile "io.vertx:vertx-ext:14-SNAPSHOT"
+    compile "io.vertx:vertx-ext:$vertxExtVersion"
     compile "ch.qos.logback:logback-classic:$logbackVersion"
     compile "net.sourceforge.argparse4j:argparse4j:$argparseVersion"
     compile "com.google.code.gson:gson:$gsonVersion"

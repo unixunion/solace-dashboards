@@ -1,18 +1,16 @@
 {
-
   // Java verticle
   "main":"com.deblox.Boot",
 
   // If your module is going to be registered in the Vert.x module registry you will also need the following
   // mandatory fields
-  "description":"Put description of your module here",
+  "description":"Solace Appliance Dashboard",
   "licenses": ["The Apache Software License Version 2.0"],
-  "author": "Joe Bloggs",
+  "author": "Kegan Holtzhausen",
 
   // Optional fields
-  "developers": ["Other Dev 1", "Other Dev 2"],
-  "keywords": ["gerbils", "cars", "cheese", "chocolate", "underpants", "herring"],
-  "homepage": "url to your project page",
+  "keywords": ["solace", "messaging", "jms"],
+  "homepage": "https://github.com/unixunion/solace-dashboards",
 
   "auto-redeploy": true
 
