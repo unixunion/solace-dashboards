@@ -4,7 +4,7 @@ realtime metrics dashboards for Solace Messaging Appliances
 
 ## about
 
-solace-dashboard server polls SEMP periodically for metrics as defined in config, then pushes those metrics over websocket to the HTML client dashboard application.
+solace-dashboard server periodically polls SEMP and pushes the results over websocket to the HTML client dashboard application. 
 
 ## screenshots
 
@@ -33,7 +33,26 @@ solace-dashboard server polls SEMP periodically for metrics as defined in config
 * add top queues within a VPN to per-VPN dashboards
 * add a solace JMS subscriber for appliance generated events
 
-## configuring
+# configuring
+
+configuration is done on a per-verticle level. to pass config to the MonitorVerticle in the com.deblox.solacemonitor package, add a *object* like:
+
+```
+  ....
+  ....
+  "com.deblox.solacemonitor.MonitorVerticle": {
+    "config": {
+      "host": "solace",
+      "username": "read_only_user",
+      "password": "password",
+      "uri": "/SEMP",
+      "method": "GET",
+      "convert_xml_response_to_json": true,
+      ....
+      ....
+```
+
+## metrics
 
 all configuring is dont through *conf.json*, basically a metric is something you want to read from solace and put onto the eventbus. the HTML client subscribes to the eventbus on topics like "vpns", "stats", "queues" and "Some VPN Name" 
 
@@ -69,11 +88,11 @@ general config for the metric
 
 #### data_path
 
-the data_path is a "." separated string of object id's within the JSON response . the HTML client uses this to reach the object which hold the keys and values of the desired metric. it is used by the various view handlers in conjunction with the shift_data javascript function in the client.
+the `data_path` is a "." separated *string* of object *keys* within the JSON response to the client. the client uses the `data_path` to reach the object which hold the *keys* and *values* of the desired object to graph. it is also used by the various view handlers which call `shift_data` javascript function in the client.
 
 e.g. `"rpc-reply.rpc.show.memory.physical-memory"`
 
-you can determin the data_path for a request by just looking over the raw responses from the solace appliance. e.g.
+you can determin the data_path for a request by inspecting the raw responses from the queried appliance. e.g.
 
 ```sh
 $> curl -d "<rpc semp-version=\"soltr/6_0\"><show><memory></memory></show></rpc>" -u "ro_user:ro_pass" "http://solace/SEMP

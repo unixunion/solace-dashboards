@@ -17,6 +17,7 @@
       "password": "somepassword",
       "method": "GET",
       "uri": "/SEMP",
+      "convert_xml_response_to_json": true,
       "metrics": {
         "redundancy": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><redundancy><detail/></redundancy></show></rpc>",

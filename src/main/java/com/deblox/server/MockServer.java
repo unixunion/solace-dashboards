@@ -106,8 +106,11 @@ public class MockServer extends AbstractVerticle {
                         logger.debug("MATCHED");
 
                         ctx.response().setChunked(true);
-                        ctx.response().sendFile("mock/" + e.getKey() + ".xml");
-
+                        try {
+                            ctx.response().sendFile("mock/" + e.getKey() + ".xml");
+                        } catch (Exception x) {
+                            x.printStackTrace();
+                        }
 
                     }
 

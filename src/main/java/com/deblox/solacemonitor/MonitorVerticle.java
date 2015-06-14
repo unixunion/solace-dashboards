@@ -99,10 +99,19 @@ public class MonitorVerticle extends AbstractVerticle {
     eb.consumer("request-metrics", message -> {
       logger.info(uuid + ": requesting metrics");
 
-      getRest(message.body().toString(), event -> {
-        logger.debug("response: " + event.toString());
-        message.reply(Util.xml2json(event.toString()));
-      });
+      try {
+        getRest(message.body().toString(), event -> {
+          logger.debug("response: " + event.toString());
+          if (config().getBoolean("convert_xml_response_to_json", false)) {
+            message.reply(Util.xml2json(event.toString()));
+          } else {
+            message.reply(event.toString());
+          }
+        });
+      } catch (Exception e) {
+        logger.warn("unable to get metric");
+        e.printStackTrace();
+      }
 
     });
 
@@ -173,29 +182,36 @@ public class MonitorVerticle extends AbstractVerticle {
 
           logger.debug("metric interval handler for " + metricConfig.getKey() + " every " + interval);
 
-          getRest(metricConfig.getKey(), event -> {
-            logger.debug("metric: " + event.toString());
+          try {
 
-            JsonObject metricMessage = new JsonObject();
-            metricMessage.put("topic", metricConfig.getKey());
-            metricMessage.put("data", Util.xml2json(event.toString()));
 
-            // get the config for the metric
-            JsonObject msgConfig = config.getJsonObject("metrics")
-                    .getJsonObject(metricConfig.getKey())
-                    .getJsonObject("config", new JsonObject());
+            getRest(metricConfig.getKey(), event -> {
+              logger.debug("metric: " + event.toString());
 
-            // get the view_format by name
-            msgConfig.put("view_format", config.getJsonObject("views", new JsonObject())
-                    .getJsonObject(msgConfig.getString("view", "default")));
+              JsonObject metricMessage = new JsonObject();
+              metricMessage.put("topic", metricConfig.getKey());
+              metricMessage.put("data", Util.xml2json(event.toString()));
 
-            // put the config into the message
-            metricMessage.put("config", msgConfig);
+              // get the config for the metric
+              JsonObject msgConfig = config.getJsonObject("metrics")
+                      .getJsonObject(metricConfig.getKey())
+                      .getJsonObject("config", new JsonObject());
 
-            // publish the metric
-            eb.publish(metricConfig.getKey(), metricMessage);
+              // get the view_format by name
+              msgConfig.put("view_format", config.getJsonObject("views", new JsonObject())
+                      .getJsonObject(msgConfig.getString("view", "default")));
 
-          });
+              // put the config into the message
+              metricMessage.put("config", msgConfig);
+
+              // publish the metric
+              eb.publish(metricConfig.getKey(), metricMessage);
+
+            });
+          } catch (Exception e) {
+            logger.warn("unable to publish metric");
+            e.printStackTrace();
+          }
         });
 
       } else {
