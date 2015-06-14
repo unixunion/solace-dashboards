@@ -103,11 +103,11 @@ $> curl -d "<rpc semp-version=\"soltr/6_0\"><show><memory></memory></show></rpc>
         <physical-memory>
           <memory-info>
             <type>Memory</type>
-            <total-in-kb>16107540</total-in-kb>
-            <used-in-kb>5800592</used-in-kb>
-            <free-in-kb>10306948</free-in-kb>
-            <buffers-in-kb>70056</buffers-in-kb>
-            <cached-in-kb>697812</cached-in-kb>
+            <total-in-kb>xxx</total-in-kb>
+            <used-in-kb>xxx</used-in-kb>
+            <free-in-kb>xxx</free-in-kb>
+            <buffers-in-kb>xxx</buffers-in-kb>
+            <cached-in-kb>xxx</cached-in-kb>
             ...
             ...
 ```
