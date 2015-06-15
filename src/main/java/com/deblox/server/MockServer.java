@@ -55,7 +55,7 @@ public class MockServer extends AbstractVerticle {
 
         try {
             serverConfig = Util.loadConfig(config().getString("serverConfig", "/conf.json"))
-                    .getJsonObject(config().getString("serverVerticle", "com.deblox.solacemonitor.SolaceMonitorVerticle"));
+                    .getJsonObject(config().getString("serverVerticle", "com.deblox.solacemonitor.MonitorVerticle"));
             metrics = serverConfig.getJsonObject("config").getJsonObject("metrics");
             logger.info("metrics: " + metrics);
         } catch (IOException e) {

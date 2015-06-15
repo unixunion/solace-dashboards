@@ -22,6 +22,8 @@ limitations under the License.
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -50,6 +52,23 @@ public class Server extends AbstractVerticle {
     // Create the event bus bridge and add it to the router.
     SockJSHandler ebHandler = SockJSHandler.create(vertx).bridge(opts);
     router.route("/eventbus/*").handler(ebHandler);
+
+    // broadcast some arbitary message
+    router.post("/api/broadcast").handler(ctx -> {
+      ctx.response().putHeader("content-type", "text/json");
+
+
+      // curl -H "Content-Type: application/json" -X POST -d '{"action":"broadcast", "data":"something"}' localhost:8080/api/broadcast
+      ctx.request().bodyHandler(req -> {
+        JsonObject msg = new JsonObject(req.toString());
+        logger.info(msg);
+        eb.publish(msg.getString("action", "unknown"), msg);
+        ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end("{}");
+      });
+
+
+
+    });
 
     // Serve the static pages
     router.route().handler(StaticHandler.create()

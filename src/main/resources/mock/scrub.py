@@ -7,6 +7,7 @@ valid = re.compile(r"^(\s+<name>).*(<\/name>)\n")
 mvpn = re.compile(r"^(\s+<message-vpn>).*(<\/message-vpn>)\n")
 
 
+
 i=0
 with open("list-vpns.xml") as f:
   target = open('list-vpns.xml.scrubbed', 'w')

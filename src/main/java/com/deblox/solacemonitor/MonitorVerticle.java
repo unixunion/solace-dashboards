@@ -167,6 +167,14 @@ public class MonitorVerticle extends AbstractVerticle {
     });
 
 
+    // listen for broadcasts from other verticles / clients
+    eb.consumer("broadcast", event -> {
+      logger.info(event.body().toString());
+      JsonObject message = new JsonObject(event.body().toString());
+      broadcast(message.getString("action", "unknown"), event.body().toString());
+    });
+
+
     // create metric emitters
     Iterator iter = config.getJsonObject("metrics", new JsonObject()).iterator();
     while (iter.hasNext()) {
