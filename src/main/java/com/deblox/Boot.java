@@ -124,8 +124,13 @@ public class Boot extends AbstractVerticle {
 
     }
 
-    startedResult.complete();
-    logger.info("startup complete");
+
+    // for testing purposes, we need a litte delay since its less code than wait implement all verticles to boot.
+    vertx.setTimer(1000, event -> {
+      startedResult.complete();
+      logger.info("startup complete");
+    });
+
 
   }
 
