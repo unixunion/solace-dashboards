@@ -171,7 +171,7 @@ public class MonitorVerticle extends AbstractVerticle {
     eb.consumer("broadcast", event -> {
       logger.info(event.body().toString());
       JsonObject message = new JsonObject(event.body().toString());
-      broadcast(message.getString("action", "unknown"), event.body().toString());
+      broadcast(message.getString("topic", "unknown"), event.body().toString());
     });
 
 

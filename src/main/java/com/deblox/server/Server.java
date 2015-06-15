@@ -57,12 +57,12 @@ public class Server extends AbstractVerticle {
     router.post("/api/broadcast").handler(ctx -> {
       ctx.response().putHeader("content-type", "text/json");
 
-
       // curl -H "Content-Type: application/json" -X POST -d '{"action":"broadcast", "data":"something"}' localhost:8080/api/broadcast
       ctx.request().bodyHandler(req -> {
         JsonObject msg = new JsonObject(req.toString());
         logger.info(msg);
-        eb.publish(msg.getString("action", "unknown"), msg);
+        eb.publish(msg.getString("topic", "unknown"), msg);
+
         ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end("{}");
       });
 
