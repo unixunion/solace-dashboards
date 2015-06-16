@@ -1,7 +1,7 @@
 // config options per service are as per: DeployOptions.java
 {
   "environment": "tests",
-  "services": ["com.deblox.solacemonitor.MonitorVerticle", "com.deblox.server.Server", "com.deblox.server.MockServer"],
+  "services": ["com.deblox.solacemonitor.MonitorVerticle", "com.deblox.server.Server", "com.deblox.server.MockServer", "com.deblox.releaseboard.ReleaseBoardVerticle"],
   "com.deblox.solacemonitor.SolaceEventVerticle": {
     "jndiProviderURL": "smf://solace1:55555",
     "username": "readonly_user",
@@ -195,6 +195,12 @@
       "port": 8081,
       "serverVerticle": "com.deblox.solacemonitor.MonitorVerticle",
       "serverConfig": "src/test/resources/conf.json"
+    }
+  },
+  "com.deblox.releaseboard.ReleaseBoardVerticle": {
+    "config": {
+      "expire_timeout": 360,
+      "check_expiry": 1000
     }
   }
 }
