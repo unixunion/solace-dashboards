@@ -60,15 +60,15 @@ a typical *metric* configuration contains:
 
 |Name    |Description|
 |--------|-----------|
-|request |request to POST to the appliance|
-|interval|the interval in *ms* to repeat requests and publish responses|
+|request |request to POST to the appliance, omit to disable|
+|interval|the interval in *ms* to repeat requests and publish responses, omit to disable|
 |config |specific metric's config|
 
 the *config* options are:
 
 |Name|Description|
 |----------|-----------|
-|data_path|path hinting to aid the client javascript to extract the neccesary data points. |
+|data_path|path hinting to aid the client javascript to extract the neccesary data points.|
 |view|the name of the view|
 |handler|the javascript function in the client that can handle the data and view|
 
@@ -249,11 +249,11 @@ the MaterializeCSS framework supports the standard 12-column system, index.html 
 
 |           s12 / l8         | s12 / l4 |
 |------------------|------------|
-|bigcharts         |   charts  |
+|big         |   small  |
 
 | s12 / l4 | s12 / l4 | s12 / l4 |
 |---|---|---
-|smallcharts-1|smallcharts-2|smallcharts-3|
+|small-1|small-2|small-3|
 
 #### chart_length
 
@@ -279,7 +279,7 @@ view config example showing how it all fits together.
               "current-ingress-rate-per-second"
             ],
             "chart_type": "stackedColumn", // canvasjs chartType
-            "div": "smallcharts-1", // div to place the chart in
+            "div": "charts-1", // div to place the chart in
             "chart_length": 20 // the chart length in samples
           },
           "Ingress Discards": {
@@ -289,12 +289,37 @@ view config example showing how it all fits together.
             ],
             "counter": true, // these are counters
             "data_path": "ingress-discards", // the keys are in this sub object
-            "div": "smallcharts-3",
+            "div": "charts-3",
             "chart_length": 10
           },
 	  ...
 	  ...
   
+```
+
+## event api
+
+post a JSON message to the /api/event uri, the body MUST contain:
+
+* topic, the topic name to send the event to
+* data, all the message contents should be in a 'data' key
+
+## release board
+
+the releaseboard can be used for displaying current release events. enable it in by turning adding the following metric:
+
+```
+"releases": {
+  "config": {
+    "handler": "release_handler"
+  }
+},
+```
+
+example of sending "release" events
+```
+./eventbus.py -p SomeProduct -v 1.4 -c 200 -s "Releasing Foo"
+
 ```
 
 ## client side

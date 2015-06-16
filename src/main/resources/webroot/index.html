@@ -35,16 +35,16 @@
     }
 
     var min_spool_plot = 100; // minimun number of message required to make the queues graph in Overview
-    var hide_counter_first_sample = true; // for "counters", hide the initial spike when refreshing view.
+    var hide_counter_first_sample = false; // for "counters", hide the initial spike when refreshing view.
     var chart_type = "stackedColumn"; // the chart_type to use ( canvasjs )
 
     // what chart type divs exist in body, these are referenced by config
     var chart_divs = [
-        "charts",
-        "bigcharts",
-        "smallcharts-1",
-        "smallcharts-2",
-        "smallcharts-3"
+        "small",
+        "big",
+        "small-1",
+        "small-2",
+        "small-3"
     ]
 
     // view data
@@ -165,6 +165,7 @@
     <script src="/js/alarms_handler.js"></script>
     <script src="/js/events_handler.js"></script>
     <script src="/js/stats_handler.js"></script>
+    <script src="/js/release_handler.js"></script>
 
     <!-- helpers -->
     <script src="/js/helpers.js"></script>
@@ -210,14 +211,14 @@
             "#22aa99", "#999999", "#705770", "#109618", "#a32929"
         ]);
 
-        charts.push(new ZChart("Message Rate", dataLength, "bigcharts", chart_type, chart_interval));
+        charts.push(new ZChart("Message Rate", dataLength, "big", chart_type, chart_interval));
         charts[0].chart.options.data = []; // reset chart 0 first element overriding defaults
 
-        charts.push(new ZChart("Discard Delta", 10, "charts", chart_type, chart_interval));
+        charts.push(new ZChart("Discard Delta", 10, "small", chart_type, chart_interval));
         charts[1].counter = true; // set counter style for Errors
         charts[1].chart.options.data = [];
 
-        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "bigcharts", chart_type), chart_interval);
+        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "big", chart_type), chart_interval);
         charts[2].chart.options.data = []; // reset chart 0 first element overriding defaults
 
         // connect to eventbus
@@ -380,8 +381,8 @@
         
         // make flipclock smaller on mobile
         if (ismobile) {
-            document.getElementById("flipclock").style.zoom = 0.5;
-            document.getElementById("flipclock").style.MozTransition = "transform: scale(0.5)";
+            // document.getElementById("flipclock").style.zoom = 0.5;
+            // document.getElementById("flipclock").style.MozTransition = "transform: scale(0.5)";
             toggle_legend();
         }
 
@@ -443,17 +444,17 @@
     <div class="valign-wrapper center">
 
         <div class="row" style="width: 100%">
-            <div class="valign center"><!--<h3 class="center-align">Solace Messages Since Go-Live</h3>-->
+<!--             <div class="valign center">
                 <div id="flipclock" class="h1z1-clock"></div>
+            </div> -->
+            <div class="row">
+                <div id="big" class="big col s12 l8 zchartContainer valign center"></div>
+                <div id="small" class="col s12 l4 zchartContainer valign center"></div>
             </div>
             <div class="row">
-                <div id="bigcharts" class="bigcharts col s12 l8 zchartContainer valign center"></div>
-                <div id="charts" class="col s12 l4 zchartContainer valign center"></div>
-            </div>
-            <div class="row">
-                <div id="smallcharts-1" class="col s12 l4 zchartContainer valign center"></div>
-                <div id="smallcharts-2" class="col s12 l4 zchartContainer valign center"></div>
-                <div id="smallcharts-3" class="col s12 l4 zchartContainer valign center"></div>
+                <div id="small-1" class="col s12 l4 zchartContainer valign center"></div>
+                <div id="small-2" class="col s12 l4 zchartContainer valign center"></div>
+                <div id="small-3" class="col s12 l4 zchartContainer valign center"></div>
             </row>
         </div>
 
@@ -672,23 +673,23 @@ liability.</p>
 <script type="text/javascript">
  
     // flipclock stuff
-    var clock = $('.h1z1-clock').FlipClock(target_rate, {
-        clockFace: 'Counter'
-    });
+    // var clock = $('.h1z1-clock').FlipClock(target_rate, {
+    //     clockFace: 'Counter'
+    // });
 
-    setTimeout(function() {
-        setInterval(function() {
+    // setTimeout(function() {
+    //     setInterval(function() {
       
-            if (current_rate < target_rate ) {
-                current_rate = Math.ceil(current_rate + ((target_rate-current_rate)/refresh_rate));
-            } else {
-                current_rate = target_rate;
-            }
+    //         if (current_rate < target_rate ) {
+    //             current_rate = Math.ceil(current_rate + ((target_rate-current_rate)/refresh_rate));
+    //         } else {
+    //             current_rate = target_rate;
+    //         }
       
       
-            clock.setCounter(Math.ceil(current_rate/1000) + "K")
-        }, refresh_rate);
-    });
+    //         clock.setCounter(Math.ceil(current_rate/1000) + "K")
+    //     }, refresh_rate);
+    // });
 
   
 </script>

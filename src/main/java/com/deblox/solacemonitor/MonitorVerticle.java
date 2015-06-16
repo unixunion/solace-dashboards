@@ -183,7 +183,7 @@ public class MonitorVerticle extends AbstractVerticle {
 
       logger.debug("registering metric: " + metricConfig.getKey());
 
-      int interval = metricConfig.getValue().getInteger("interval", 5000);
+      int interval = metricConfig.getValue().getInteger("interval", 0);
 
       if (interval != 0) {
         vertx.setPeriodic(interval, tid -> {
@@ -191,7 +191,6 @@ public class MonitorVerticle extends AbstractVerticle {
           logger.debug("metric interval handler for " + metricConfig.getKey() + " every " + interval);
 
           try {
-
 
             getRest(metricConfig.getKey(), event -> {
               logger.debug("metric: " + event.toString());

@@ -19,6 +19,11 @@
       "uri": "/SEMP",
       "convert_xml_response_to_json": true,
       "metrics": {
+        "releases": {
+          "config": {
+            "handler": "release_handler"
+          }
+        },
         "redundancy": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><redundancy></redundancy></show></rpc>",
           "interval": 10000,
@@ -89,7 +94,7 @@
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_handler"
+            "view": "generic_vpn_stats"
           }
         },
         "vpn_5": {
@@ -98,7 +103,7 @@
           "show_in_menu": true,
           "config": {
             "data_path": "rpc-reply.rpc.show.message-vpn.vpn.stats",
-            "view": "generic_handler"
+            "view": "generic_vpn_stats"
           }
         }
       },
@@ -111,14 +116,7 @@
               "current-ingress-rate-per-second"
             ],
             "chart_type": "stackedColumn",
-            "div": "smallcharts-1"
-          },
-          "denied-by-acl": {
-            "show": [
-              "denied-client-connect-acl"
-            ],
-            "counter": true,
-            "div": "smallcharts-2"
+            "div": "small-1"
           },
           "ingress-discards": {
             "show": [
@@ -130,12 +128,9 @@
               "topic-parse-error",
               "ttl-exceeded"
             ],
-            "hide": [
-              "total-ingress-discards"
-            ],
             "counter": true,
             "data_path": "ingress-discards",
-            "div": "smallcharts-3"
+            "div": "small-2"
           },
           "egress-discards": {
             "show": [
@@ -147,7 +142,7 @@
             ],
             "counter": true,
             "data_path": "egress-discards",
-            "div": "smallcharts-1"
+            "div": "small-3"
           },
           "denies": {
             "show": [
@@ -157,10 +152,11 @@
               "denied-subscribe-permission",
               "denied-subscribe-topic-acl",
               "denied-unsubscribe-permission",
-              "denied-unsubscribe-topic-acl"
+              "denied-unsubscribe-topic-acl",
+              "denied-client-connect-acl"
             ],
             "counter": true,
-            "div": "smallcharts-1"
+            "div": "small-1"
           },
           "errors": {
             "show": [
@@ -174,7 +170,7 @@
               "already-exists-msgs-sent"
             ],
             "counter": true,
-            "div": "smallcharts-2"
+            "div": "small-2"
           }
         }
       }

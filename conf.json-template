@@ -1,7 +1,7 @@
 // config options per service are as per: DeployOptions.java
 {
   "environment": "root",
-  "services": ["com.deblox.solacemonitor.MonitorVerticle", "com.deblox.server.Server"],
+  "services": ["com.deblox.solacemonitor.MonitorVerticle", "com.deblox.server.Server", "com.deblox.releaseboard.ReleaseBoardVerticle"],
   "com.deblox.solacemonitor.MonitorVerticle": {
     "config": {
       "version": "v1.2.5",
@@ -12,6 +12,11 @@
       "method": "GET",
       "convert_xml_response_to_json": true,
       "metrics": {
+        "releases": {
+          "config": {
+            "handler": "release_handler"
+          }
+        },
         "redundancy": {
           "request": "<rpc semp-version=\"soltr/6_0\"><show><redundancy><detail/></redundancy></show></rpc>",
           "interval": 10000,
@@ -106,7 +111,7 @@
               "current-ingress-rate-per-second"
             ],
             "chart_type": "stackedColumn",
-            "div": "smallcharts-1",
+            "div": "small-1",
             "chart_length": 20
           },
           "Message Byte Rate": {
@@ -115,7 +120,7 @@
               "average-ingress-byte-rate-per-minute"
             ],
             "chart_type": "stackedColumn",
-            "div": "smallcharts-2",
+            "div": "small-2",
             "chart_length": 20
           },
           "Ingress Discards": {
@@ -130,7 +135,7 @@
             ],
             "counter": true,
             "data_path": "ingress-discards",
-            "div": "smallcharts-3",
+            "div": "small-3",
             "chart_length": 10
           },
           "Egress Discards": {
@@ -143,7 +148,7 @@
             ],
             "counter": true,
             "data_path": "egress-discards",
-            "div": "smallcharts-3",
+            "div": "small-3",
             "chart_length": 10
           },
           "Denies": {
@@ -158,7 +163,7 @@
               "denied-client-connect-acl"
             ],
             "counter": true,
-            "div": "smallcharts-1",
+            "div": "small-1",
             "chart_length": 40
           },
           "Errors": {
@@ -173,7 +178,7 @@
               "already-exists-msgs-sent"
             ],
             "counter": true,
-            "div": "smallcharts-2",
+            "div": "small-2",
             "chart_length": 40
           }
         }
@@ -190,6 +195,14 @@
     "redeployGracePeriod": 1000
   },
   "com.deblox.server.Server": {
-    "port": 8080
+    "config": {
+      "port": 8080
+    }
+  },
+  "com.deblox.releaseboard.ReleaseBoardVerticle": {
+    "config": {
+      "expire_timeout": 360,
+      "check_expiry": 1000
+    }
   }
 }

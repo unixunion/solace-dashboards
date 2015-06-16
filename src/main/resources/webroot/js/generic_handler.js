@@ -82,8 +82,7 @@
                 console.log("create chart config: " + chart_config);
                 console.log(view_format[chart_config]);
                 
-
-                var div_name = (view_format[chart_config].div === undefined) ? "bigcharts" : view_format[chart_config].div;
+                var div_name = (view_format[chart_config].div === undefined) ? "big" : view_format[chart_config].div;
                 var chart_type = (view_format[chart_config].chart_type == undefined) ? "stackedColumn" : view_format[chart_config].chart_type;
                 var chart_length = (view_format[chart_config].chart_length == undefined) ? 10 : view_format[chart_config].chart_length;
                 var counter = (view_format[chart_config].counter == undefined) ? false : view_format[chart_config].counter;

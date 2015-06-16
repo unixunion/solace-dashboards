@@ -33,6 +33,12 @@ import io.vertx.ext.web.handler.sockjs.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
 
+
+/*
+
+curl -H "Content-Type: application/json" -X POST -d '{"topic":"release-event", "data":{ "id": "RF-1123", "component": "Poker", "Version": "1.2.3.4", "status": "preparing"  }}' localhost:8080/api/event
+ */
+
 public class Server extends AbstractVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(Server.class);
@@ -54,19 +60,28 @@ public class Server extends AbstractVerticle {
     router.route("/eventbus/*").handler(ebHandler);
 
     // broadcast some arbitary message
-    router.post("/api/broadcast").handler(ctx -> {
+    router.post("/api/event").handler(ctx -> {
       ctx.response().putHeader("content-type", "text/json");
 
-      // curl -H "Content-Type: application/json" -X POST -d '{"action":"broadcast", "data":"something"}' localhost:8080/api/broadcast
+      // curl -H "Content-Type: application/json" -X POST -d '{"topic":"release-event", "data":"something"}' localhost:8080/api/event
       ctx.request().bodyHandler(req -> {
-        JsonObject msg = new JsonObject(req.toString());
-        logger.info(msg);
-        eb.publish(msg.getString("topic", "unknown"), msg);
 
-        ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end("{}");
+        try {
+          JsonObject msg = new JsonObject(req.toString());
+          logger.info(msg);
+
+          eb.send(msg.getString("topic", "unknown"), msg.getJsonObject("data"), resp -> {
+            ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(resp.result().body().toString());
+          });
+
+
+        } catch (Exception ex) {
+          logger.error(ex.getMessage());
+          ctx.fail(500);
+        }
+
+
       });
-
-
 
     });
 

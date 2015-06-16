@@ -102,16 +102,22 @@ public class MockServer extends AbstractVerticle {
 
                     JsonObject j = (JsonObject) e.getValue();
 
-                    if (j.getString("request").equals(body.toString())) {
-                        logger.debug("MATCHED");
+                    try {
 
-                        ctx.response().setChunked(true);
-                        try {
-                            ctx.response().sendFile("mock/" + e.getKey() + ".xml");
-                        } catch (Exception x) {
-                            x.printStackTrace();
+
+                        if (j.getString("request").equals(body.toString())) {
+                            logger.debug("MATCHED");
+
+                            ctx.response().setChunked(true);
+                            try {
+                                ctx.response().sendFile("mock/" + e.getKey() + ".xml");
+                            } catch (Exception x) {
+                                x.printStackTrace();
+                            }
+
                         }
-
+                    } catch (Exception x) {
+                        logger.warn("skipping " + j.toString());
                     }
 
                     logger.debug(j.getString("request"));
@@ -119,9 +125,7 @@ public class MockServer extends AbstractVerticle {
                 });
 
 
-
             });
-
 
 
         });
