@@ -27,3 +27,4 @@ META-INF
 .vertx
 scripts/libpipeline.yaml
 /conf.json
+/conf-prod.json
