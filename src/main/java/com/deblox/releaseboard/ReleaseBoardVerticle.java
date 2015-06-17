@@ -18,14 +18,19 @@ limitations under the License.
 
 */
 
+import com.deblox.Util;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.Future;
+import io.vertx.core.file.AsyncFile;
+import io.vertx.core.file.OpenOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -52,6 +57,7 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
   private static final Logger logger = LoggerFactory.getLogger(ReleaseBoardVerticle.class);
   EventBus eb;
   Map<String, JsonObject> releasesData;
+  String stateFile;
 
   // date formatter
   DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -72,8 +78,30 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
     // map of releases, should contain date events were fired in  / updated also
     releasesData = new HashMap<>();
 
+    stateFile = config().getString("state_file", "/state.json");
+
     // connect to the eventbus
     eb = vertx.eventBus();
+
+
+    // load the state file if exists
+    vertx.fileSystem().exists(stateFile, h -> {
+      if (h.succeeded()) {
+        try {
+          JsonArray history = Util.loadConfig(stateFile).getJsonArray("releases");
+          for (Object release  : history) {
+            JsonObject releaseJson = new JsonObject(release.toString());
+            logger.info("loading release: " + releaseJson.getString("id"));
+            releasesData.put(releaseJson.getString("id"), releaseJson.getJsonObject("data"));
+          }
+
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+
+      }
+    });
+
 
 
     // listen for release events from other verticles / clients
@@ -128,18 +156,6 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
 
 
 
-    // create metric emitters
-//    Iterator iter = config.getJsonObject("metrics", new JsonObject()).iterator();
-//    while (iter.hasNext()) {
-//
-//      Map.Entry<String, JsonObject> metricConfig = (Map.Entry) iter.next();
-//
-//
-//    }
-
-
-
-
     // periodically expire old releases in the map
     vertx.setPeriodic(config().getInteger("check_expiry", 1000), res -> {
       // iterate over map, check dates for each, expire as needed
@@ -171,12 +187,66 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
     });
 
 
-    startFuture.complete();
+    // save the current pile of releases into a JSON periodically
+    vertx.setPeriodic(10000, t -> {
+      saveState();
+    });
+
+  startFuture.complete();
 
   }
 
+  @Override
+  public void stop(Future<Void> stopFuture) {
+    saveState();
+
+    vertx.setTimer(1000, tid -> {
+      logger.info("shutdown");
+      stopFuture.complete();
+    });
+
+  }
+
+  public void saveState() {
+    logger.info("saving state");
+    JsonObject db = new JsonObject();
+    JsonArray releases = new JsonArray();
+
+    Iterator<Map.Entry<String, JsonObject>> iter = releasesData.entrySet().iterator();
+    while (iter.hasNext()) {
+      Map.Entry<String, JsonObject> entry = iter.next();
+      JsonObject rel = new JsonObject();
+      rel.put("id", entry.getKey());
+      rel.put("data", entry.getValue());
+      releases.add(rel);
+    }
+
+    db.put("releases", releases);
+
+    vertx.fileSystem().exists(stateFile, te -> {
+      if (te.succeeded()) {
+        vertx.fileSystem().deleteBlocking(stateFile);
+        vertx.fileSystem().createFileBlocking(stateFile);
+      } else {
+        vertx.fileSystem().createFileBlocking(stateFile);
+      }
+
+      vertx.fileSystem().open(stateFile, new OpenOptions().setCreate(true).setWrite(true), r -> {
+        if (r.succeeded()) {
+          AsyncFile file = r.result();
+          file.write(Buffer.buffer(db.toString()));
+          file.close();
+        } else {
+          logger.warn(r.cause());
+        }
+      });
+
+    });
 
 
+
+
+  }
 
 
 }

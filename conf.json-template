@@ -201,8 +201,9 @@
   },
   "com.deblox.releaseboard.ReleaseBoardVerticle": {
     "config": {
-      "expire_timeout": 360,
-      "check_expiry": 1000
+      "expire_timeout": 108000,
+      "check_expiry": 60000,
+      "state_file": "/tmp/state.json"
     }
   }
 }

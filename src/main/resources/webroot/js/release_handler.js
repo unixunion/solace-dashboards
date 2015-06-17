@@ -112,7 +112,7 @@ var accordion = function() {
 
 
 // timer to show a card for 2 seconds
-window.setInterval(accordion, 2000);
+window.setInterval(accordion, 3000);
 
 
 // create a new element in the list
