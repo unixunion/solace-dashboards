@@ -149,7 +149,7 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
         Map.Entry<String,JsonObject> entry = iter.next();
 
 
-        logger.info("checking expiry on " + entry.getKey() + " v " + entry.getValue());
+        logger.debug("checking expiry on " + entry.getKey() + " v " + entry.getValue());
 
         // now
         LocalDateTime now = LocalDateTime.now();
