@@ -10,6 +10,7 @@ depends on:
 var active_item = 0;
 var last_item = 0;
 var release_data = [];
+var show_environment = "PROD"
 
 function remove(id) {
     return (elem=document.getElementById(id)).parentNode.removeChild(elem);
@@ -196,24 +197,30 @@ var get_icon_class = function(code) {
 
 var release_data_handler = function(msg) {
 	for (r in msg.data) { 
-		if (release_data[msg.data[r].id] == undefined) {
-			console.log("new release event");
-			release_data[msg.data[r].id] = msg.data[r];
 
-			var new_record = release_data[msg.data[r].id];
+		if (msg.data[r].environment.toUpperCase() ===  show_environment.toUpperCase()) {
+			if (release_data[msg.data[r].id] == undefined) {
+				console.log("new release event");
+				release_data[msg.data[r].id] = msg.data[r];
 
-			// append new release div
-			document.getElementById("releases").appendChild(new_release_element(new_record));
+				var new_record = release_data[msg.data[r].id];
 
+				// append new release div
+				document.getElementById("releases").appendChild(new_release_element(new_record));
+
+			} else {
+				var old_record = release_data[msg.data[r].id];
+				var new_record = msg.data[r];
+				release_data[msg.data[r].id] = new_record;
+
+				document.getElementById(old_record.id).innerHTML = "<p>" + new_record.status + "</p>";
+				document.getElementById(old_record.id + "-icon").setAttribute("class", get_icon_class(new_record.code));
+
+			}
 		} else {
-			var old_record = release_data[msg.data[r].id];
-			var new_record = msg.data[r];
-			release_data[msg.data[r].id] = new_record;
-
-			document.getElementById(old_record.id).innerHTML = "<p>" + new_record.status + "</p>";
-			document.getElementById(old_record.id + "-icon").setAttribute("class", get_icon_class(new_record.code));
-
+			console.log("environment doesnt match, skipping this one");
 		}
+
 	}
 }
 

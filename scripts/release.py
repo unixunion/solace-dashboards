@@ -1,8 +1,33 @@
 #!/usr/bin/env python
 
-'''
 
-codes
+from optparse import OptionParser
+import urllib
+import urllib2
+import json
+
+url = "http://solacemonitor.swe1.unibet.com/api/event"
+url = "http://localhost:8080/api/event"
+
+request = {}
+
+request['data'] = {}
+
+if __name__ == "__main__":
+	usage='''
+
+Options:
+  -h, --help            show this help message and exit
+  -t TOPIC, --topic=TOPIC
+                        topic to send to
+  -p COMPONENT, --component=COMPONENT
+                        component name
+  -v VERSION, --version=VERSION
+                        version
+  -s STATUS, --status=STATUS
+  -c CODE, --code=CODE  status code
+
+code must be one of:
 
 100 release request prepared
 
@@ -19,25 +44,17 @@ codes
 301 verifying infrastructure
 302 release in progress
 303 not taking traffic
+304 closing release jira
 
 500 error verify release request
 501 error verify infrastructure tests
 502 deploy failed
-'''
+503 error closing release jira
+504 error calling RAT
+505 error activating in loadbalander
+506 error migrating database
 
-from optparse import OptionParser
-import urllib
-import urllib2
-import json
-
-url = "http://localhost:8080/api/event"
-
-request = {}
-
-request['data'] = {}
-
-if __name__ == "__main__":
-	usage="-h for help"
+	'''
 	parser = OptionParser(usage=usage)
 	parser.add_option("-t", "--topic", action="store", type="string", dest="topic",
 		help="topic to send to", default="release-event")
@@ -52,15 +69,32 @@ if __name__ == "__main__":
 		help="status code")
 
 	parser.add_option("-s", "--status", action="store", type="string", dest="status",
-		help="status string")
+		help='code')
+
+	parser.add_option("-e", "--environment", action="store", type="string", dest="environment",
+		help='environment string')
+
+	parser.add_option
 
 	(options, args) = parser.parse_args()
+
+	if options.component is None:
+		parser.error("component name missing")
+	if options.version is None:
+		parser.error("version missing")
+	if options.code is None:
+		parser.error("code is missing")
+	if options.status is None:
+		parser.error("status string is missing")
+	if options.environment is None:
+		parser.error("env string is missing")
 
 	request['topic'] = options.topic
 	request['data']['component'] = options.component;
 	request['data']['version'] = options.version
 	request['data']['code'] = options.code
 	request['data']['status'] = options.status
+	request['data']['environment'] = options.environment
 
 	print("%s" % request)
 
