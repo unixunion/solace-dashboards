@@ -1,6 +1,6 @@
 var alarms_handler = function (msg) {
                 
-    var d = data_shifter(msg.data, msg.config['data_path'], chance_of_logging)
+    var d = data_shifter(msg.data, msg.config['data_path'], chance_of_logging())
 
     var node = document.getElementById('alarmscollection');
     while (node.hasChildNodes()) {   

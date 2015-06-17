@@ -1,7 +1,7 @@
     // vpns handler
     var vpns_handler = function (msg) {
 
-        logging = chance_of_logging;
+        logging = chance_of_logging();
 
         var tmpDate = new Date();
 

@@ -10,16 +10,18 @@ codes
 201 infrastructure tests passed
 202 skipping infrastructure tests
 203 db migration completed
-204 closing release jira
+204 closed release jira
 205 deploy succeeded
 206 loadbalander succeeded
+207 release completed
 
 300 migrating databses
 301 verifying infrastructure
 302 release in progress
+303 not taking traffic
 
 500 error verify release request
-501 error verify infra
+501 error verify infrastructure tests
 502 deploy failed
 '''
 

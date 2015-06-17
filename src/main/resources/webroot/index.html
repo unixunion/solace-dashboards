@@ -25,7 +25,7 @@
     var refresh_rate = 1000/5; // call render on flipclock and charts at this rate.
     var chart_interval = null; // the normal plot interval, null = auto
     var show_legend = true;
-    var logging_chance = 5; // percent chance of logging
+    var logging_chance = 0; // percent chance of logging
 
     // if desktop, set the default chart height dynamically else fix it for mobile!
     if (!ismobile) {
@@ -73,7 +73,7 @@
     var queues_handler = function (msg) {
 
         var tmpDate = new Date();
-        logging = chance_of_logging;
+        logging = chance_of_logging();
 
         // var data = msg.data['rpc-reply'].rpc.show.queue.queues.queue;
 

@@ -9,18 +9,19 @@ depends on:
 
 var active_item = 0;
 var last_item = 0;
+var release_data = [];
 
-
+// removes active from all headers
 var collapse_all = function() {
 
 	var z = 0;
 	
 	try {
-
 		while (z < document.getElementById("releases").children.length) {
 			try {
 				document.getElementById("releases").children[z].children[0].setAttribute('class', 'collapsible-header');
 			} catch (err) {
+				console.log("elent wont collapse");
 				console.log(err);
 			}
 			z++;
@@ -33,6 +34,7 @@ var collapse_all = function() {
 
 
 
+// moves the active card to display it round robin 
 var accordion = function() {
 
 	console.log("active_item: " + active_item);
@@ -72,24 +74,124 @@ var accordion = function() {
 window.setInterval(accordion, 2000);
 
 
-// handler for releases
-var release_handler = function(msg) {
+// create a new element in the list
+var new_release_element = function(msg) {
+	listitem = document.createElement('li')
 
-	console.log("release_handler: ");
-	console.log(msg);
+	header = document.createElement('div');
+	
+	icon = document.createElement('i');
+	icon.setAttribute('class', 'mdi-av-new-releases');
+	icon.setAttribute('id', msg.id + "-icon");
 
-  	var node = document.getElementById("releases");
-	// remove children
+	header.appendChild(icon);
 
-	collapse_all();
+	var title = document.createElement('p');
+	title.setAttribute('id', msg.id + "-title");
+	title.innerHTML = msg.id;
 
-	if (node != undefined) {
-	  	if (node.hasChildNodes()) {
-			node.removeChild(node.childNodes[0]);
-		}
+	header.appendChild(title);
+
+	card = document.createElement('div');
+	card.setAttribute('class', 'collapsible-body');
+	card.setAttribute('id', msg.id);
+	card.innerHTML = "<p>" + msg.status + "</p>";
+
+	listitem.appendChild(header);
+	listitem.appendChild(card);
+
+	return listitem;
+}
+
+
+// returns a materialize icon name based on a code
+/*
+
+http://materializecss.com/icons.html
+
+100 release request prepared
+
+200 release request verified
+201 infrastructure tests passed
+202 skipping infrastructure tests
+203 db migration completed
+204 closed release jira
+205 deploy succeeded
+206 loadbalander succeeded
+207 release completed
+
+300 migrating databses
+301 verifying infrastructure
+302 release in progress
+303 not taking traffic
+
+500 error verify release request
+501 error verify infrastructure tests
+502 deploy failed
+
+*/
+var get_icon_class = function(code) {
+	if (code == 100) {
+		return "mdi-action-assignment";
 	}
 
-  	if (node == undefined){
+	// releae complete
+	if (code == 207) {
+		return "mdi-action-done-all"
+	}
+
+	// diverting traffic
+	if (code == 303) {
+		return "mdi-communication-call-missed"
+	}
+
+	// doing some process
+	if (code >= 300) {
+		return "mdi-av-loop"
+	}
+
+	// error
+	if (code >= 500 ) {
+		return "mdi-alert-error"
+	}
+
+
+	// else new
+	return "mdi-navigation-check"
+	
+
+}
+
+
+var release_data_handler = function(msg) {
+	for (r in msg.data) { 
+		if (release_data[msg.data[r].id] == undefined) {
+			console.log("new release event");
+			release_data[msg.data[r].id] = msg.data[r];
+
+			var new_record = release_data[msg.data[r].id];
+
+			// append new release div
+			document.getElementById("releases").appendChild(new_release_element(new_record));
+
+		} else {
+			var old_record = release_data[msg.data[r].id];
+			var new_record = msg.data[r];
+			release_data[msg.data[r].id] = new_record;
+
+			document.getElementById(old_record.id).innerHTML = "<p>" + new_record.status + "</p>";
+			document.getElementById(old_record.id + "-icon").setAttribute("class", get_icon_class(new_record.code));
+
+		}
+	}
+}
+
+
+
+var release_handler_v2 = function(msg) {
+
+	var node = document.getElementById("releases");
+	if (node == undefined){
   		console.log("creating releases node");
   		node = document.createElement('ul');
   		node.setAttribute('id', 'releases');
@@ -100,55 +202,89 @@ var release_handler = function(msg) {
   		document.getElementById('small').appendChild(node);
   	}
 
-
-  	for (r in msg.data) {
-
-  		var release = msg.data[r];
-  		console.log("release r: " + r);
-
-	  	var existing = document.getElementById(release.id);
-
-	  	if (existing == undefined) {
-			listitem = document.createElement('li');
-			// listitem.setAttribute('id', release.id + "-item");
-			
-			header = document.createElement('div');
-			// set a id for the header
-
-			if (r == last_item) {
-				console.log("setting " + r + " to active ");
-				header.setAttribute('class', 'collapsible-header active');
-				$('.collapsible').collapsible({
-					accordion : true
-				});
-			} else {
-				header.setAttribute('class', 'collapsible-header');
-			}
-			
-			icon = document.createElement('i');
-			icon.setAttribute('class', 'mdi-social-whatshot');
-			header.appendChild(icon);
-			var title = document.createElement('p');
-			title.innerHTML = release.id
-			header.appendChild(title);
-
-			card = document.createElement('div');
-			card.setAttribute('class', 'collapsible-body');
-			card.setAttribute('id', release.id);
-			card.innerHTML = "<p>" + release.status + "</p>";
-
-			listitem.appendChild(header);
-			listitem.appendChild(card);
-
-			node.appendChild(listitem);
-	  	} else {
-	  		existing.innerHTML="<p>" + release.status + "</p>";
-	  	}
-
-  	}
-
-  	// sort the list
-  	sortUnorderedList('releases');
-
-
+	release_data_handler(msg);
 }
+
+
+// // handler for releases
+// var release_handler = function(msg) {
+
+// 	console.log("release_handler: ");
+// 	console.log(msg);
+
+// 	release_data_handler(msg);
+
+//   	var node = document.getElementById("releases");
+// 	// remove children
+
+// 	collapse_all();
+
+// 	if (node != undefined) {
+// 	  	if (node.hasChildNodes()) {
+// 			node.removeChild(node.childNodes[0]);
+// 		}
+// 	}
+
+//   	if (node == undefined){
+//   		console.log("creating releases node");
+//   		node = document.createElement('ul');
+//   		node.setAttribute('id', 'releases');
+//   		// node.id = 'releases';
+//   		node.setAttribute('class', 'collapsible popout');
+//   		node.setAttribute('data-collapsible', 'accordion');
+
+//   		document.getElementById('small').appendChild(node);
+//   	}
+
+
+//   	for (r in msg.data) {
+
+//   		var release = msg.data[r];
+//   		console.log("release r: " + r);
+
+// 	  	var existing = document.getElementById(release.id);
+
+// 	  	if (existing == undefined) {
+// 			listitem = document.createElement('li');
+// 			// listitem.setAttribute('id', release.id + "-item");
+			
+// 			header = document.createElement('div');
+// 			// set a id for the header
+
+// 			if (r == last_item) {
+// 				console.log("setting " + r + " to active ");
+// 				header.setAttribute('class', 'collapsible-header active');
+// 				$('.collapsible').collapsible({
+// 					accordion : true
+// 				});
+// 			} else {
+// 				header.setAttribute('class', 'collapsible-header');
+// 			}
+			
+// 			icon = document.createElement('i');
+// 			icon.setAttribute('class', 'mdi-social-whatshot');
+// 			header.appendChild(icon);
+// 			var title = document.createElement('p');
+// 			title.innerHTML = release.id
+// 			header.appendChild(title);
+
+// 			card = document.createElement('div');
+// 			card.setAttribute('class', 'collapsible-body');
+// 			card.setAttribute('id', release.id);
+// 			card.innerHTML = "<p>" + release.status + "</p>";
+
+// 			listitem.appendChild(header);
+// 			listitem.appendChild(card);
+
+// 			node.appendChild(listitem);
+// 	  	} else {
+// 	  		existing.innerHTML="<p>" + release.status + "</p>";
+// 	  	}
+
+//   	}
+
+//   	// sort the list
+//   	sortUnorderedList('releases');
+
+
+// }

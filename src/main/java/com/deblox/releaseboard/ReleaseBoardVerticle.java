@@ -54,7 +54,7 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
   Map<String, JsonObject> releasesData;
 
   // date formatter
-  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   /**
    * Start the verticle
