@@ -7,20 +7,32 @@ depends on:
 
 */
 
+// for the accordion
 var active_item = 0;
 var last_item = 0;
-var release_data = [];
-var show_environment = "PROD"
 
+// store release data
+var release_data = [];
+
+// the filter to match and only show releases for
+release_filter_string = "prod"
+var release_filter = new RegExp(release_filter_string,"gi");
+var expire_releases = 10800000; // 3 hours millis 
+
+var set_release_filter = function(msg) {
+	app_status("Changing release filter to " + msg);
+	release_filter = new RegExp(msg,"gi");
+}
+
+// delets a object by its parent
 function remove(id) {
     return (elem=document.getElementById(id)).parentNode.removeChild(elem);
 }
 
-// removes active from all headers
+// removes 'active' from all headers
 var collapse_all = function() {
-
 	var z = 0;
-	
+
 	try {
 		while (z < document.getElementById("releases").children.length) {
 			try {
@@ -39,7 +51,6 @@ var collapse_all = function() {
 	// check dates in release_data and expire as needed
 	for (release in release_data) {
 
-
 		try {
 			var d = release_data[release].date
 
@@ -48,7 +59,7 @@ var collapse_all = function() {
 			var timeDiff = Math.abs(now.getTime() - then.getTime());
 			console.log("delta is: " + timeDiff);
 
-			if (timeDiff > 10800000) {
+			if (timeDiff > expire_releases) {
 				console.log("expunging stale entry");
 				remove(release_data[release].id+ '-main');
 			}
@@ -155,10 +166,15 @@ http://materializecss.com/icons.html
 301 verifying infrastructure
 302 release in progress
 303 not taking traffic
+304 closing release jira
 
 500 error verify release request
 501 error verify infrastructure tests
 502 deploy failed
+503 error closing release jira
+504 error calling RAT
+505 error activating in loadbalander
+506 error migrating database
 
 */
 var get_icon_class = function(code) {
@@ -198,7 +214,8 @@ var get_icon_class = function(code) {
 var release_data_handler = function(msg) {
 	for (r in msg.data) { 
 
-		if (msg.data[r].environment.toUpperCase() ===  show_environment.toUpperCase()) {
+		if (release_filter.test(msg.data[r].environment)) {
+		// if (msg.data[r].environment.toUpperCase() ===  show_environment.toUpperCase()) {
 			if (release_data[msg.data[r].id] == undefined) {
 				console.log("new release event");
 				release_data[msg.data[r].id] = msg.data[r];

@@ -415,6 +415,8 @@
 
                 <li><a class='button' onclick=toggle_alarms()><i id="nav_alarms" class="mdi-action-alarm-on"></i></a></li>
 
+                <!-- filter releases  -->
+                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='release-filter-dropdown'><i class="mdi-content-filter-list"></i></a></li>
 
                 <!-- menu vpn-->
                 <ul id='metrics-dropdown' class='dropdown-content z-depth-2'>
@@ -427,6 +429,18 @@
                      <li class="divider"></li>
                     <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_type('stackedArea')>Area</a></li>
                     <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_type('stackedColumn')>Column</a></li>
+                </ul>
+
+                <ul id='release-filter-dropdown' class='dropdown-content z-depth-2'>
+                    <li><a href="#1" class='waves-effect waves-teal'>Release Filter</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('prod')>Prod</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('pt1')>Pt1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('qa1')>Qa1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('ci1')>Ci1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('si1')>Si1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('dev')>Dev</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('.*')>All</a></li>
                 </ul>
 
 
