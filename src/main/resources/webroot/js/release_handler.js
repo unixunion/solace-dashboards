@@ -22,6 +22,13 @@ var expire_releases = 10800000; // 3 hours millis
 var set_release_filter = function(msg) {
 	app_status("Changing release filter to " + msg);
 	release_filter = new RegExp(msg,"gi");
+
+	for (release in release_data) {
+		if (!release_filter.test(release_data[release].environment)) {
+			remove(release_data[release].id + "-main");
+		}
+	}
+
 }
 
 // delets a object by its parent

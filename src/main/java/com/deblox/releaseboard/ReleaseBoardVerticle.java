@@ -188,7 +188,7 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
 
 
     // save the current pile of releases into a JSON periodically
-    vertx.setPeriodic(10000, t -> {
+    vertx.setPeriodic(config().getInteger("save_interval", 60000), t -> {
       saveState();
     });
 

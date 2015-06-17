@@ -203,7 +203,8 @@
     "config": {
       "expire_timeout": 108000,
       "check_expiry": 60000,
-      "state_file": "/tmp/state.json"
+      "state_file": "/tmp/state.json",
+      "save_interval": 60000
     }
   }
 }
