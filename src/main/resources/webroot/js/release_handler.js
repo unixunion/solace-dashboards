@@ -11,6 +11,10 @@ var active_item = 0;
 var last_item = 0;
 var release_data = [];
 
+function remove(id) {
+    return (elem=document.getElementById(id)).parentNode.removeChild(elem);
+}
+
 // removes active from all headers
 var collapse_all = function() {
 
@@ -28,6 +32,31 @@ var collapse_all = function() {
 		}
 	} catch (err) {
 		console.log("unable to nuke accordion");
+	}
+
+
+	// check dates in release_data and expire as needed
+	for (release in release_data) {
+
+
+		try {
+			var d = release_data[release].date
+
+			var then = new Date(d);
+			var now = new Date();
+			var timeDiff = Math.abs(now.getTime() - then.getTime());
+			console.log("delta is: " + timeDiff);
+
+			if (timeDiff > 10800000) {
+				console.log("expunging stale entry");
+				remove(release_data[release].id+ '-main');
+			}
+		} catch (err) {
+			console.log("unable to purge stale elements");
+			console.log(err);
+		}
+
+
 	}
 	
 }
@@ -77,6 +106,7 @@ window.setInterval(accordion, 2000);
 // create a new element in the list
 var new_release_element = function(msg) {
 	listitem = document.createElement('li')
+	listitem.setAttribute('id', msg.id + '-main');
 
 	header = document.createElement('div');
 	
@@ -145,14 +175,15 @@ var get_icon_class = function(code) {
 		return "mdi-communication-call-missed"
 	}
 
-	// doing some process
-	if (code >= 300) {
-		return "mdi-av-loop"
-	}
 
 	// error
 	if (code >= 500 ) {
 		return "mdi-alert-error"
+	}
+
+	// doing some process
+	if (code >= 300) {
+		return "mdi-av-loop"
 	}
 
 
