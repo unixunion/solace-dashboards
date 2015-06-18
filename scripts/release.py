@@ -6,7 +6,7 @@ import urllib
 import urllib2
 import json
 
-url = "http://solacemonitor.swe1.unibet.com/api/event"
+#url = "http://solacemonitor.swe1.unibet.com/api/event"
 url = "http://localhost:8080/api/event"
 
 request = {}

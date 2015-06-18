@@ -306,19 +306,29 @@ post a JSON message to the /api/event uri, the body MUST contain:
 
 ## release board
 
-the releaseboard can be used for displaying current release events. enable it in by turning adding the following metric:
+the releaseboard can be used for displaying current release events. enable it in by turning on the following metric:
 
 ```
 "releases": {
   "config": {
-    "handler": "release_handler"
+    "handler": "release_handler_v2"
   }
 },
 ```
 
+a special release_handler takes care of the processing of events. see the release_handler.js for specific documentation.
+
+events all have codes which dictate the icon's and colorization within the UI. in general:
+
+* 100 = blue
+* 200 = green
+* 300 = orange
+* 500 = red
+
 example of sending "release" events
 ```
-./eventbus.py -p SomeProduct -v 1.4 -c 200 -s "Releasing Foo"
+./eventbus.py -e QA -p SomeProduct -v 1.4-123 -c 200 -s "Releasing Some Product"
+./eventbus.py -e QA -p OtherProduct -v 1.0-1 -c 100 -s "Pending Approval"
 
 ```
 

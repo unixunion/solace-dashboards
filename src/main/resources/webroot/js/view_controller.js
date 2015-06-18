@@ -49,6 +49,13 @@
                     
                 }
 
+                try {
+                    document.getElementById('releases').setAttribute('class', 'collapsible popout');
+                } catch(err) {
+                    console.log("unable to find releases div")
+                }
+                
+
 
             } else if (active_view == "default") {
                 console.log("hide default");
@@ -66,6 +73,12 @@
                 }
 
                 show_view(view_data[msg]);
+                
+                try {
+                    document.getElementById('releases').setAttribute('class', 'hide');
+                } catch(err) {
+                    console.log("unable to find releases div")
+                }
 
             } else {
                 console.log("show view " + msg + " hide view " + active_view);

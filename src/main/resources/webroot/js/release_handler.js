@@ -1,6 +1,46 @@
 /*
 
-handles showing the cards, manages an materialize css style accordion
+displays a accordion style list of releases with icons, colorization, environment name and status strings.
+
+send in a array of releases with the following attributes each: 
+
+	id: product-1.2.3-12 ( combination of component and version )
+	component: product
+	version: 1.2.3-12
+	environment: string
+	date: time of event, format: "yyyy-MM-dd HH:mm:ss"
+	status: String of status
+	code: one of the following:
+
+		// process "document" icon, blue bg
+		100 release request prepared
+
+		// single check mark, green bg
+		200 release request verified
+		201 infrastructure tests passed
+		202 skipping infrastructure tests
+		203 db migration completed
+		204 closed release jira
+		205 deploy succeeded
+		206 loadbalander succeeded
+		207 release completed
+
+		// process arrows, orange bg
+		300 migrating databses
+		301 verifying infrastructure
+		302 release in progress
+		303 not taking traffic
+		304 closing release jira
+
+		// esclamation, red bg
+		500 error verify release request
+		501 error verify infrastructure tests
+		502 deploy failed
+		503 error closing release jira
+		504 error calling RAT
+		505 error activating in loadbalander
+		506 error migrating database
+
 
 depends on:
 	helpers.js
@@ -18,6 +58,7 @@ var release_data = [];
 release_filter_string = "prod"
 var release_filter = new RegExp(release_filter_string,"gi");
 var expire_releases = 10800000; // 3 hours millis 
+var placementDiv = "small"; // the div to place in
 
 var set_release_filter = function(msg) {
 	app_status("Changing release filter to " + msg);
@@ -36,6 +77,20 @@ function remove(id) {
     return (elem=document.getElementById(id)).parentNode.removeChild(elem);
 }
 
+function hide(id) {
+    return (elem=document.getElementById(id)).parentNode.setAttribute('class', 'hide');
+}
+
+function hasExpired(dateString) {
+	var then = new Date(dateString);
+	var now = new Date();
+	var timeDiff = Math.abs(now.getTime() - then.getTime());
+	if (timeDiff > expire_releases) {
+		return true;
+	}
+	return false;
+}
+
 // removes 'active' from all headers
 var collapse_all = function() {
 	var z = 0;
@@ -45,7 +100,7 @@ var collapse_all = function() {
 			try {
 				document.getElementById("releases").children[z].children[0].setAttribute('class', 'collapsible-header');
 			} catch (err) {
-				console.log("elent wont collapse");
+				console.log("element wont collapse");
 				console.log(err);
 			}
 			z++;
@@ -58,21 +113,27 @@ var collapse_all = function() {
 	// check dates in release_data and expire as needed
 	for (release in release_data) {
 
-		try {
-			var d = release_data[release].date
+		if (release_data[release] != undefined) {
 
-			var then = new Date(d);
-			var now = new Date();
-			var timeDiff = Math.abs(now.getTime() - then.getTime());
-			console.log("delta is: " + timeDiff);
+			try {
+				// var d = release_data[release].date
 
-			if (timeDiff > expire_releases) {
-				console.log("expunging stale entry");
-				remove(release_data[release].id+ '-main');
+				if (hasExpired(release_data[release].date)) {
+					console.log("expunging stale entry " + release_data[release].id+ '-main');
+					var name = release_data[release].id + '-main';
+					// release_data[release] = undefined;
+					// document.getElementById(name).setAttribute('class', 'hide');
+					remove(name);
+				}
+
+				
+			} catch (err) {
+				console.log("unable to purge stale elements " + release_data[release].id+ '-main');
+				console.log(err);
 			}
-		} catch (err) {
-			console.log("unable to purge stale elements");
-			console.log(err);
+
+		} else {
+			console.log("element " + release + " is undefined");
 		}
 
 
@@ -100,7 +161,8 @@ var accordion = function() {
 			console.log("active item is " + active_item);
 
 			collapse_all();
-			
+			// set on the li object
+			// console.log(document.getElementById("releases").children[i].children[0]);
 			document.getElementById("releases").children[i].children[0].setAttribute('class', 'collapsible-header active');
 			last_item = active_item;
 			active_item++;
@@ -124,10 +186,12 @@ window.setInterval(accordion, 3000);
 
 // create a new element in the list
 var new_release_element = function(msg) {
+
 	listitem = document.createElement('li')
 	listitem.setAttribute('id', msg.id + '-main');
 
 	header = document.createElement('div');
+	header.setAttribute('id', msg.id + "-header");
 	
 	icon = document.createElement('i');
 	icon.setAttribute('class', 'mdi-av-new-releases');
@@ -135,9 +199,15 @@ var new_release_element = function(msg) {
 
 	header.appendChild(icon);
 
+	environment = document.createElement('span');
+	environment.setAttribute('class', 'badge')
+	environment.innerHTML = msg.environment.toUpperCase();
+	header.appendChild(environment);
+
 	var title = document.createElement('p');
 	title.setAttribute('id', msg.id + "-title");
 	title.innerHTML = msg.id;
+
 
 	header.appendChild(title);
 
@@ -158,30 +228,7 @@ var new_release_element = function(msg) {
 
 http://materializecss.com/icons.html
 
-100 release request prepared
-
-200 release request verified
-201 infrastructure tests passed
-202 skipping infrastructure tests
-203 db migration completed
-204 closed release jira
-205 deploy succeeded
-206 loadbalander succeeded
-207 release completed
-
-300 migrating databses
-301 verifying infrastructure
-302 release in progress
-303 not taking traffic
-304 closing release jira
-
-500 error verify release request
-501 error verify infrastructure tests
-502 deploy failed
-503 error closing release jira
-504 error calling RAT
-505 error activating in loadbalander
-506 error migrating database
+see the code list at the top of the file:
 
 */
 var get_icon_class = function(code) {
@@ -199,7 +246,6 @@ var get_icon_class = function(code) {
 		return "mdi-communication-call-missed"
 	}
 
-
 	// error
 	if (code >= 500 ) {
 		return "mdi-alert-error"
@@ -214,36 +260,65 @@ var get_icon_class = function(code) {
 	// else new
 	return "mdi-navigation-check"
 	
+}
 
+var get_class = function(code) {
+
+	// error
+	if (code >= 500 ) {
+		return "red lighten-1"
+	}
+
+	// doing some process
+	if (code >= 300) {
+		return "orange lighten-4"
+	}
+
+	if (code == 100) {
+		return "blue lighten-2"
+	}
+
+	// else new
+	return "green lighten-3"
+	
 }
 
 
 var release_data_handler = function(msg) {
 	for (r in msg.data) { 
 
-		if (release_filter.test(msg.data[r].environment)) {
-		// if (msg.data[r].environment.toUpperCase() ===  show_environment.toUpperCase()) {
-			if (release_data[msg.data[r].id] == undefined) {
-				console.log("new release event");
-				release_data[msg.data[r].id] = msg.data[r];
 
-				var new_record = release_data[msg.data[r].id];
+		if (!hasExpired(msg.data[r].date))  {
 
-				// append new release div
-				document.getElementById("releases").appendChild(new_release_element(new_record));
+			if (release_filter.test(msg.data[r].environment)) {
+			// if (msg.data[r].environment.toUpperCase() ===  show_environment.toUpperCase()) {
+				if (release_data[msg.data[r].id] == undefined) {
+					console.log("new release event");
+					release_data[msg.data[r].id] = msg.data[r];
 
+					var new_record = release_data[msg.data[r].id];
+
+					// append new release div
+					document.getElementById("releases").appendChild(new_release_element(new_record));
+
+				} else {
+					var old_record = release_data[msg.data[r].id];
+					var new_record = msg.data[r];
+					release_data[msg.data[r].id] = new_record;
+
+					document.getElementById(old_record.id).innerHTML = "<p>" + new_record.status + "</p>";
+					document.getElementById(old_record.id + "-icon").setAttribute("class", get_icon_class(new_record.code));
+					document.getElementById(old_record.id + "-main").setAttribute("class", get_class(new_record.code));
+					// document.getElementById(old_record.id + "-header").setAttribute("class", get_class(new_record.code));
+
+				}
 			} else {
-				var old_record = release_data[msg.data[r].id];
-				var new_record = msg.data[r];
-				release_data[msg.data[r].id] = new_record;
-
-				document.getElementById(old_record.id).innerHTML = "<p>" + new_record.status + "</p>";
-				document.getElementById(old_record.id + "-icon").setAttribute("class", get_icon_class(new_record.code));
-
+				console.log("environment doesnt match, skipping this one");
 			}
 		} else {
-			console.log("environment doesnt match, skipping this one");
+			console.log("ignoring expired data: " + msg.data[r].id);
 		}
+
 
 	}
 }
@@ -261,7 +336,7 @@ var release_handler_v2 = function(msg) {
   		node.setAttribute('class', 'collapsible popout');
   		node.setAttribute('data-collapsible', 'accordion');
 
-  		document.getElementById('small').appendChild(node);
+  		document.getElementById(placementDiv).appendChild(node);
   	}
 
 	release_data_handler(msg);
