@@ -66,7 +66,11 @@ var set_release_filter = function(msg) {
 
 	for (release in release_data) {
 		if (!release_filter.test(release_data[release].environment)) {
-			remove(release_data[release].id + "-main");
+			try {
+				remove(release_data[release].id + "-main");
+			} catch (err) {
+				console.log("unable to remove " + release_data[release].id);
+			}
 		}
 	}
 
