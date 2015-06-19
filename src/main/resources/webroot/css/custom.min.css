@@ -1,14 +1,6 @@
 .materialize-blue {
   background-color: #fdeaeb !important; }
 
-/*.badge {
-	background-color: #00cc00;
-}*/
-
-/*.mdi-alert-error {
-	background-color: #ff0000;
-}
-*/
 body {
 	display: flex;
 	min-height: 100vh;

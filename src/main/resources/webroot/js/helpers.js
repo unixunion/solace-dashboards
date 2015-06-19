@@ -1,4 +1,10 @@
 
+
+    /*
+        
+        Sorts a ul
+
+    */
     function sortUnorderedList(ul, sortDescending) {
       if(typeof ul == "string")
         ul = document.getElementById(ul);

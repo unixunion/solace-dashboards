@@ -297,16 +297,72 @@ view config example showing how it all fits together.
   
 ```
 
-## event api
+## event-api
 
-post a JSON message to the /api/event uri, the body MUST contain:
+the event-api delivers messages into vert.x's eventbus, use it by posting JSON messages to the `/api/event` uri, the body **MUST** contain:
 
-* topic, the topic name to send the event to
-* data, all the message contents should be in a 'data' key
+* *topic*, the topic name to send the event to
+* *data*, all the message contents should be in a 'data' key
 
-## release board
+### events / endpoints / topics
 
-the releaseboard can be used for displaying current release events. enable it in by turning on the following metric:
+the following events can be fired into the system
+
+#### release-event
+
+creates a new *release-event* and broadcasts *it* to all clients. internally the *release* is given an `id` comprising of a *component*-*version*`string.
+
+example of a message that can be posted to `/api/event`
+
+```
+
+{
+    "data": {
+        "code": 302,
+        "component": "xyz",
+        "environment": "SI1",
+        "status": "Release in Progress",
+        "version": "1.0.0.327"
+    },
+    "topic": "release-event"
+}
+
+```
+
+each release is assigned a `id` which defaults to `component`-`version`, though you can force your own `id` by specifying it as an additional field in the `data` key.
+
+the release event pinup board in the HTML client displays the releases and their status information, along with some colorization and iconification based on the `code` value within the *release*. 
+
+implement *custom* codes in the `release_handler.js`, refer to MaterializeCSS classes. you will need to modify the methods: 
+
+* get_icon_class
+* get_class
+
+##### table of codes
+
+| code | description | icon | color |
+|----|----|----|---|
+|100s| process / manual step required | document | blue |
+|200s| stage completion success | check mark | green |
+|300s| stage in progress | circle of arrows | orange |
+|500s| error in stage | esclamation | red |
+
+
+### expire-release-event
+
+deletes a `release` event from the *ReleaseBoardVerticle* and notifies *all* clients that the release has expired, note that the **id** is a combination of `component` and `version`.
+
+this example expires the above created *release-event*
+```
+{
+	"id": "xyz-1.0.0.327",
+	"topic": "expire-release-event"
+}
+```
+
+### release board
+
+the releaseboard can be used for displaying ongoing *release* events. enable it in by turning on the following `metric` definition:
 
 ```
 "releases": {
@@ -316,7 +372,7 @@ the releaseboard can be used for displaying current release events. enable it in
 },
 ```
 
-a special release_handler takes care of the processing of events. see the release_handler.js for specific documentation.
+the handler `release_handler_v2` takes care of processing the *release-events*. see the `release_handler.js` for specific implementation and details.
 
 events all have codes which dictate the icon's and colorization within the UI. in general:
 

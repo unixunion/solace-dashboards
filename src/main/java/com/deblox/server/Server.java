@@ -36,7 +36,26 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
 /*
 
-curl -H "Content-Type: application/json" -X POST -d '{"topic":"release-event", "data":{ "id": "RF-1123", "component": "Poker", "Version": "1.2.3.4", "status": "preparing"  }}' localhost:8080/api/event
+Server
+
+Listens on configured port and serves http and websocket traffic:
+* Static Serves resources/webroot
+* websocket /eventbus/* endpoint
+* /api/event REST endpoint
+
+
+API EVENT
+the '/api/event' uri accepts JSON POSTs of message structure:
+
+{
+ "topic": string name of topic to route message to,
+ "data": any json data payload
+}
+
+Example with curl:
+  curl -H "Content-Type: application/json" -X POST -d '{"topic":"release-event", "data":{ "id": "RF-1123", "component": "Game", "Version": "1.2.3.4", "status": "preparing", "environment": "qa1"  }}' localhost:8080/api/event
+
+
  */
 
 public class Server extends AbstractVerticle {
@@ -59,19 +78,22 @@ public class Server extends AbstractVerticle {
     SockJSHandler ebHandler = SockJSHandler.create(vertx).bridge(opts);
     router.route("/eventbus/*").handler(ebHandler);
 
-    // broadcast some arbitary message
+    // handle messages pushed in over REST
     router.post("/api/event").handler(ctx -> {
       ctx.response().putHeader("content-type", "text/json");
 
-      // curl -H "Content-Type: application/json" -X POST -d '{"topic":"release-event", "data":"something"}' localhost:8080/api/event
       ctx.request().bodyHandler(req -> {
 
         try {
           JsonObject msg = new JsonObject(req.toString());
           logger.info(msg);
 
-          eb.send(msg.getString("topic", "unknown"), msg.getJsonObject("data"), resp -> {
-            ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(resp.result().body().toString());
+          eb.send(msg.getString("topic"), msg.getJsonObject("data"), resp -> {
+            if (resp.succeeded()) {
+              ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end(resp.result().body().toString());
+            } else {
+              ctx.fail(500);
+            }
           });
 
 
