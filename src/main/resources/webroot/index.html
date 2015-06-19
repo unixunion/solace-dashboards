@@ -18,7 +18,7 @@
     var ismobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 
     // client version to announce to server
-    var client_version = "v1.2.7";
+    var client_version = "v1.2.6";
     var charts = []; // overview charts object
     var chartCount = 0; // chart count
     var dataLength = 40; // default graph length
@@ -156,8 +156,6 @@
     var reconnector;
   
     </script>
-    <!-- first jq -->
-    <script src="/js/jquery.js"></script>
 
     <!-- handlers -->
     <script src="/js/view_controller.js"></script>
@@ -173,7 +171,7 @@
     <script src="/js/helpers.js"></script>
 
     <!-- deps -->
-
+    <script src="/js/jquery.js"></script>
     <script src="/js/canvasjs.js"></script>
     <script src="/js/flipclock.js"></script>
 
@@ -213,14 +211,14 @@
             "#22aa99", "#999999", "#705770", "#109618", "#a32929"
         ]);
 
-        charts.push(new ZChart("Message Rate", dataLength, "small-1", chart_type, chart_interval));
+        charts.push(new ZChart("Message Rate", dataLength, "big", chart_type, chart_interval));
         charts[0].chart.options.data = []; // reset chart 0 first element overriding defaults
 
-        charts.push(new ZChart("Discard Delta", 10, "small-2", chart_type, chart_interval));
+        charts.push(new ZChart("Discard Delta", 10, "small", chart_type, chart_interval));
         charts[1].counter = true; // set counter style for Errors
         charts[1].chart.options.data = [];
 
-        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "small-2", chart_type), chart_interval);
+        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "big", chart_type), chart_interval);
         charts[2].chart.options.data = []; // reset chart 0 first element overriding defaults
 
         // connect to eventbus
@@ -405,7 +403,7 @@
     <nav>
         <div class="nav-wrapper blue">
 
-            <a href="#" id="app_title" class="hide-on-small-only brand-logo center">Dashboard</a>
+            <a href="#" id="app_title" class="hide-on-small-only brand-logo center">Solace Monitor</a>
 
             <ul id="nav-fixed" class="left blue">
                 <!-- <i class="left mdi-file-cloud-done"></i> -->
@@ -417,6 +415,8 @@
 
                 <li><a class='button' onclick=toggle_alarms()><i id="nav_alarms" class="mdi-action-alarm-on"></i></a></li>
 
+                <!-- filter releases  -->
+                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='release-filter-dropdown'><i class="mdi-content-filter-list"></i></a></li>
 
                 <!-- menu vpn-->
                 <ul id='metrics-dropdown' class='dropdown-content z-depth-2'>
@@ -431,6 +431,17 @@
                     <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_type('stackedColumn')>Column</a></li>
                 </ul>
 
+                <ul id='release-filter-dropdown' class='dropdown-content z-depth-2'>
+                    <li><a href="#1" class='waves-effect waves-teal'>Release Filter</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('prod')>Prod</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('pt1')>Pt1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('qa1')>Qa1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('ci1')>Ci1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('si1')>Si1</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('dev')>Dev</a></li>
+                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('.*')>All</a></li>
+                </ul>
 
 
             </ul>
@@ -443,7 +454,7 @@
 
 </div>
 
-<div id="maindiv" style="width: 100%">
+<div style="width: 100%">
     <div class="valign-wrapper center">
 
         <div class="row" style="width: 100%">

@@ -74,24 +74,20 @@ code must be one of:
 	parser.add_option("-e", "--environment", action="store", type="string", dest="environment",
 		help='environment string')
 
-	parser.add_option("-i", "--id", action="store", type="string", dest="id", default=None,
-		help="id is required for some event")
-
 	parser.add_option
 
 	(options, args) = parser.parse_args()
 
-	if options.topic == "release-event":
-		if options.component is None:
-			parser.error("component name missing")
-		if options.version is None:
-			parser.error("version missing")
-		if options.code is None:
-			parser.error("code is missing")
-		if options.status is None:
-			parser.error("status string is missing")
-		if options.environment is None:
-			parser.error("env string is missing")
+	if options.component is None:
+		parser.error("component name missing")
+	if options.version is None:
+		parser.error("version missing")
+	if options.code is None:
+		parser.error("code is missing")
+	if options.status is None:
+		parser.error("status string is missing")
+	if options.environment is None:
+		parser.error("env string is missing")
 
 	request['topic'] = options.topic
 	request['data']['component'] = options.component;
@@ -99,8 +95,6 @@ code must be one of:
 	request['data']['code'] = options.code
 	request['data']['status'] = options.status
 	request['data']['environment'] = options.environment
-	request['data']['id'] = options.id
-
 
 	print("%s" % request)
 
