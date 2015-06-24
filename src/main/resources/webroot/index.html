@@ -9,7 +9,7 @@
     <script type="text/javascript">
 
     /*
-    
+
     VARIABLES
 
     */
@@ -141,7 +141,7 @@
 
     }
 
-    // create a uuid 
+    // create a uuid
     var uuid = guid();
 
     // message rate
@@ -155,8 +155,14 @@
     // object holders
     var eb;
     var reconnector;
-  
+
     </script>
+
+    <!-- deps -->
+    <script src="/js/jquery.js"></script>
+    <script src="/js/canvasjs.js"></script>
+    <script src="/js/flipclock.js"></script>
+
 
     <!-- handlers -->
     <script src="/js/view_controller.js"></script>
@@ -171,16 +177,17 @@
     <!-- helpers -->
     <script src="/js/helpers.js"></script>
 
-    <!-- deps -->
-    <script src="/js/jquery.js"></script>
-    <script src="/js/canvasjs.js"></script>
-    <script src="/js/flipclock.js"></script>
-
     <!-- css -->
-    <link rel="stylesheet" href="/css/materialize.min.css">
+    <!--<link rel="stylesheet" href="/css/materialize.min.css">-->
     <link rel="stylesheet" href="/css/custom.min.css">
     <link rel="stylesheet" href="/css/flipclock.css">
-    <script type="text/javascript" src="/js/materialize.min.js"></script>
+
+    <!-- Materialize -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/js/materialize.min.js"></script>
+
+    <!--<script type="text/javascript" src="/js/materialize.min.js"></script>-->
     <script type="text/javascript" src="/js/sockjs.min.js"></script>
 
     <!-- vertx eventbus -->
@@ -207,7 +214,7 @@
         } else {
             console.log("you already agreed!");
         }
-        
+
 
         CanvasJS.addColorSet("customColorSet1",
         [
@@ -231,7 +238,7 @@
         initialiseEventbus = function() {
 
             if (!popup) {
-                popup = true;              
+                popup = true;
                 $('#modal1').openModal()
             }
 
@@ -260,7 +267,7 @@
 
             /*
              * Request Config from the EventBus
-             * 
+             *
              * first gets a list of all metrics, then asks for each ones config in turn.
              */
             eb.send("request-config", "all", function(msg) {
@@ -270,7 +277,7 @@
 
                 // clean menu
                 var list = document.getElementById('metrics-dropdown');
-                while (list.hasChildNodes()) {   
+                while (list.hasChildNodes()) {
                     list.removeChild(list.firstChild);
                 }
 
@@ -335,8 +342,8 @@
                                 eb.registerHandler(reply.topic, window[reply.config.handler]);
                             }
                         })
-                    }                
-                
+                    }
+
             });
 
 
@@ -384,7 +391,7 @@
             var toggle = true;
 
         }
-        
+
         // make flipclock smaller on mobile
         if (ismobile) {
             // document.getElementById("flipclock").style.zoom = 0.5;
@@ -399,7 +406,7 @@
 
 
 });
-             
+
 </script>
 
 </head>
@@ -414,15 +421,12 @@
             <ul id="nav-fixed" class="left blue">
                 <!-- <i class="left mdi-file-cloud-done"></i> -->
 
-                <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="mdi-navigation-menu" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>            
+                <li><a class='dropdown-button' data-constrainwidth="false"  data-beloworigin="true" href='#' data-activates='metrics-dropdown'><i class="mdi-navigation-menu" data-position="bottom" data-delay="50" data-tooltip="Select a Dashboard"></i></a></li>
 
                 <!-- chart Type  -->
                 <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='chart-type-dropdown'><i class="mdi-editor-insert-chart"></i></a></li>
 
                 <li><a class='button' onclick=toggle_alarms()><i id="nav_alarms" class="mdi-action-alarm-on"></i></a></li>
-
-                <!-- filter releases  -->
-                <li><a class='dropdown-button' data-constrainwidth="false" data-beloworigin="true" href='#' data-activates='release-filter-dropdown'><i class="mdi-content-filter-list"></i></a></li>
 
                 <!-- menu vpn-->
                 <ul id='metrics-dropdown' class='dropdown-content z-depth-2'>
@@ -437,17 +441,6 @@
                     <li><a href="#!" class='waves-effect waves-teal' onclick=toggle_chart_type('stackedColumn')>Column</a></li>
                 </ul>
 
-                <ul id='release-filter-dropdown' class='dropdown-content z-depth-2'>
-                    <li><a href="#1" class='waves-effect waves-teal'>Release Filter</a></li>
-                    <li class="divider"></li>
-                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('prod')>Prod</a></li>
-                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('pt1')>Pt1</a></li>
-                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('qa1')>Qa1</a></li>
-                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('ci1')>Ci1</a></li>
-                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('si1')>Si1</a></li>
-                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('dev')>Dev</a></li>
-                    <li><a href="#1" class='waves-effect waves-teal' onclick=set_release_filter('.*')>All</a></li>
-                </ul>
 
 
             </ul>
@@ -461,7 +454,7 @@
 </div>
 
 <div style="width: 100%">
-    <div class="valign-wrapper center">
+    <div id="maindiv" class="valign-wrapper center">
 
         <div class="row" style="width: 100%">
 <!--             <div class="valign center">

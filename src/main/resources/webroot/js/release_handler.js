@@ -2,7 +2,7 @@
 
 displays a accordion style list of releases with icons, colorization, environment name and status strings.
 
-send in a array of releases with the following attributes each: 
+send in a array of releases with the following attributes each:
 
 	id: product-1.2.3-12 ( combination of component and version )
 	component: product
@@ -57,16 +57,46 @@ var release_data = [];
 // the filter to match and only show releases for
 release_filter_string = "prod"
 var release_filter = new RegExp(release_filter_string,"gi");
-var expire_releases = 10800000*4; // 12 hours millis
+var hour_millis = 3600000;
+var expire_releases = (hour_millis * 12); // 12 hours millis
 var placementDiv = "small-3"; // the div to place in
 
+
+// list of environments supported in "environment" key of release
+var release_environments = [
+	"prod",
+	"pt1",
+	"qa1",
+	"ci1",
+	"si1",
+	"dev",
+	".*"
+];
+
+
+// changes the regex used to control what is displayed
 var set_release_filter = function(msg) {
 	app_status("Changing release filter to " + msg);
 	release_filter = new RegExp(msg,"gi");
 
 	for (release in release_data) {
-		if (!release_filter.test(release_data[release].environment)) {
+		console.log("matching: " + release_data[release].environment);
+		if (release_filter.test(release_data[release].environment) == true ) {
+
 			try {
+				console.log("match removing " + release_data[release].id + " regex " + release_filter.test(release_data[release].environment));
+				remove(release_data[release].id + "-main");
+			} catch(err) {
+				console.log("nothing to remove");
+			}
+
+			console.log("adding " + release_data[release].id);
+			document.getElementById("releases").appendChild(new_release_element(release_data[release]));
+
+
+		} else {
+			try {
+				console.log("nonmatch removing " + release_data[release].id + " regex " + release_filter.test(release_data[release].environment));
 				remove(release_data[release].id + "-main");
 			} catch (err) {
 				console.log("unable to remove " + release_data[release].id);
@@ -76,23 +106,67 @@ var set_release_filter = function(msg) {
 
 }
 
-// delets a object by its parent
+function release_dialog(release_dialog, title, text, callback, id) {
+	// create a re-usable modal for dismissing the release events
+
+	console.log("release_dialog " + id);
+	var mainbody = document.getElementById("maindiv");
+
+	var modal = document.createElement("div");
+	modal.setAttribute("class", "modal");
+	modal.setAttribute("id", release_dialog);
+
+	var modal_content = document.createElement("div")
+	modal_content.setAttribute("class", "modal-content");
+	modal_content.innerHTML = "<h4>" + title + "</h4><p>" + text + "</p>" ;
+
+
+	var modal_footer = document.createElement("div");
+	var modal_button = document.createElement("a");
+	modal_button.setAttribute("class", "modal-action modal-close waves-effect waves-green btn-flat");
+	modal_button.setAttribute("href", "#!");
+	//modal_button.setAttribute("onclick", callback + "('" + arguments[4] + "')");
+	modal_button.addEventListener("click", callback(id));
+	modal_button.innerHTML="Confirm";
+	modal_footer.appendChild(modal_button);
+
+	modal.appendChild(modal_content);
+	modal.appendChild(modal_footer);
+
+	mainbody.appendChild(modal);
+
+	$("#" + release_dialog).openModal();
+
+}
+
+
+var dismiss_release = function(msg) {
+	console.log("setting dismiss with " + "expire_release" + " " + msg);
+	release_dialog('dismiss_release_modal', 'Dismiss Event', 'You will dismiss this event for EVERYONE, are you sure?', expire_release, msg);
+
+}
+
+// deletes a object by its parent
 function remove(id) {
     return (elem=document.getElementById(id)).parentNode.removeChild(elem);
 }
 
+// changes the parent element to "hide"
 function hide(id) {
     return (elem=document.getElementById(id)).parentNode.setAttribute('class', 'hide');
 }
 
+// checks a now - date(from string) > expire_release, returns true / false
+// note expire_releases if in millis!
 function hasExpired(dateString) {
 	var then = new Date(dateString);
 	var now = new Date();
 	var timeDiff = Math.abs(now.getTime() - then.getTime());
-	console.log(timeDiff);
 	if (timeDiff > expire_releases) {
+		console.log("EXPIRED");
 		return true;
 	}
+	console.log("NOT EXPIRED");
 	return false;
 }
 
@@ -131,7 +205,7 @@ var collapse_all = function() {
 					remove(name);
 				}
 
-				
+
 			} catch (err) {
 				console.log("unable to purge stale elements " + release_data[release].id+ '-main');
 				console.log(err);
@@ -143,33 +217,26 @@ var collapse_all = function() {
 
 
 	}
-	
+
 }
 
 
 
-// moves the active card to display it round robin 
+// moves the active card to display it round robin
 var accordion = function() {
 
-	console.log("active_item: " + active_item);
-
 	if (active_item >= document.getElementById("releases").children.length) {
-		console.log("resetting active_item");
 		active_item = 0;
 	}
 
 	var i = 0;
 	while (i < document.getElementById("releases").children.length) {
-		console.log("i: " + i);
 
 		if (i >= active_item) {
-			console.log("active item is " + active_item);
 
-			collapse_all();
-			// set on the li object
-			// console.log(document.getElementById("releases").children[i].children[0]);
+			collapse_all(); // remove "active" from all elements
+
 			document.getElementById("releases").children[i].children[0].setAttribute('class', 'collapsible-header active');
-			last_item = active_item;
 			active_item++;
 			break;
 		}
@@ -189,18 +256,35 @@ var accordion = function() {
 window.setInterval(accordion, 3000);
 
 
+var expire_release = function(msg) {
+	console.log("expire_release " + msg);
+
+	var req = {
+		"id": msg
+	}
+
+	eb.send("expire-release-event", req, function(msg) {
+		Materialize.toast("Cluster Response: " + msg.result, 2000);
+	});
+	// release_data[msg].expired = true;
+	// remove(msg + "-main");
+}
+
+
 // create a new element in the list
 var new_release_element = function(msg) {
 
 	listitem = document.createElement('li')
 	listitem.setAttribute('id', msg.id + '-main');
+	// listitem.setAttribute("class", "section scrollspy");
 
 	header = document.createElement('div');
 	header.setAttribute('id', msg.id + "-header");
-	
+
 	icon = document.createElement('i');
-	icon.setAttribute('class', 'mdi-av-new-releases');
+	icon.setAttribute('class', 'material-icons left');
 	icon.setAttribute('id', msg.id + "-icon");
+	icon.innerHTML="star";
 
 	header.appendChild(icon);
 
@@ -209,10 +293,17 @@ var new_release_element = function(msg) {
 	environment.innerHTML = msg.environment.toUpperCase();
 	header.appendChild(environment);
 
+	// close button
+	var cls_btn = document.createElement('a');
+	cls_btn.setAttribute("onclick", "Materialize.toast('<span>Clusterwide Dismiss " + msg.id + "?</span><a class=\x22btn-flat yellow-text\x22 href=\x22#!\x22 onclick=expire_release(\x22"+msg.id+"\x22)>CONFIRM</a>', 3000)");
+
+	cls_btn.innerHTML = "<i class='material-icons left'>delete</i>";
+	header.appendChild(cls_btn);
+
+
 	var title = document.createElement('p');
 	title.setAttribute('id', msg.id + "-title");
 	title.innerHTML = msg.id;
-
 
 	header.appendChild(title);
 
@@ -238,33 +329,32 @@ see the code list at the top of the file:
 */
 var get_icon_class = function(code) {
 	if (code == 100) {
-		return "mdi-action-assignment";
+		return "assignment"
 	}
 
 	// release complete OR closed release jira
 	if (code == 207 || code == 204) {
-		return "mdi-action-done-all"
+		return "done all"
 	}
 
 	// diverting traffic
 	if (code == 303) {
-		return "mdi-communication-call-missed"
+		return "call missed"
 	}
 
 	// error
 	if (code >= 500 ) {
-		return "mdi-alert-error"
+		return "error outline"
 	}
 
 	// doing some process
 	if (code >= 300) {
-		return "mdi-av-loop"
+		return "loop"
 	}
 
+	// else done
+	return "done"
 
-	// else new
-	return "mdi-navigation-check"
-	
 }
 
 var get_class = function(code) {
@@ -285,15 +375,41 @@ var get_class = function(code) {
 
 	// else new
 	return "green lighten-3"
-	
+
 }
 
 
+
+// expire items in release_data
+var expire_release_data_handler = function(msg) {
+	console.log("expire_release_data_handler ");
+	console.log(msg);
+	for (id in msg.data) {
+		try {
+			release_data[msg.data[id]].expired = true;
+			console.log("expired id " + release_data[msg.data[id]].id );
+			remove(msg.data[id] + "-main");
+		} catch(err) {
+			console.log("unable to expire " + msg.data[id]);
+		}
+
+	}
+}
+
+
+// runs through the data and creates new items as needed. checks expiry before adding!
 var release_data_handler = function(msg) {
-	for (r in msg.data) { 
+	for (r in msg.data) {
 
+//		var logging = chance_of_logging();
+		var logging = true;
 
-		if (!hasExpired(msg.data[r].date))  {
+		if (logging) {
+			console.log("release_data_handler: ");
+			console.log(msg);
+		}
+
+		if (!hasExpired(msg.data[r].date) || msg.data[r].expired)  {
 
 			if (release_filter.test(msg.data[r].environment)) {
 			// if (msg.data[r].environment.toUpperCase() ===  show_environment.toUpperCase()) {
@@ -311,10 +427,13 @@ var release_data_handler = function(msg) {
 					var new_record = msg.data[r];
 					release_data[msg.data[r].id] = new_record;
 
-					document.getElementById(old_record.id).innerHTML = "<p>" + new_record.status + "</p>";
-					document.getElementById(old_record.id + "-icon").setAttribute("class", get_icon_class(new_record.code));
-					document.getElementById(old_record.id + "-main").setAttribute("class", get_class(new_record.code));
-					// document.getElementById(old_record.id + "-header").setAttribute("class", get_class(new_record.code));
+					try {
+						document.getElementById(old_record.id).innerHTML = "<p>" + new_record.status + "</p>";
+						document.getElementById(old_record.id + "-icon").innerHTML=get_icon_class(new_record.code);
+						document.getElementById(old_record.id + "-main").setAttribute("class", get_class(new_record.code));
+					} catch (err) {
+						console.log("error setting classes for: " + old_record.id);
+					}
 
 				}
 			} else {
@@ -330,103 +449,68 @@ var release_data_handler = function(msg) {
 
 
 
+// the main entry point for the releae handler, this will also place the initial ul if its not present
 var release_handler_v2 = function(msg) {
 
 	var node = document.getElementById("releases");
 	if (node == undefined){
+
   		console.log("creating releases node");
   		node = document.createElement('ul');
   		node.setAttribute('id', 'releases');
-  		// node.id = 'releases';
-  		node.setAttribute('class', 'collapsible popout');
+  		node.setAttribute('class', 'collapsible'); // popout
   		node.setAttribute('data-collapsible', 'accordion');
 
   		document.getElementById(placementDiv).appendChild(node);
   	}
 
-	release_data_handler(msg);
+  	// routing based on action
+  	if (msg.action == "default") {
+  		release_data_handler(msg);
+  	} else if (msg.action == "expire") {
+  		expire_release_data_handler(msg);
+  	}
+
 }
 
 
-// // handler for releases
-// var release_handler = function(msg) {
+// when the DOM is ready, register the navigation for THIS plugin!
+$(document).ready(function(){
+	// Create the navigationals
+	var menu = document.createElement('li');
 
-// 	console.log("release_handler: ");
-// 	console.log(msg);
+	var btn = document.createElement('a');
+	btn.setAttribute("class", "dropdown-button");
+	btn.setAttribute("data-constrainwidth", "false");
+	btn.setAttribute("data-beloworigin", "true");
+	btn.setAttribute("href", "#!");
+	btn.setAttribute("data-activates", "release-filter-dropdown");
+	btn.innerHTML = '<i class="mdi-content-filter-list"></i>';
+	menu.appendChild(btn);
 
-// 	release_data_handler(msg);
+	var nav = document.getElementById('nav-fixed').appendChild(menu);
+	nav.appendChild(btn);
 
-//   	var node = document.getElementById("releases");
-// 	// remove children
+	var btn_data = document.createElement('ul');
+	btn_data.setAttribute("id", "release-filter-dropdown");
+	btn_data.setAttribute("class", "dropdown-content z-depth-2");
 
-// 	collapse_all();
+	// create the elements in the dropdown
+	for (e in release_environments) {
+		var list_item = document.createElement("li");
+		var list_link = document.createElement("a");
+		list_link.setAttribute("href", "#!");
+		list_link.setAttribute("class", "waves-effect waves-teal");
+		list_link.setAttribute("onclick", "set_release_filter('" + release_environments[e] + "')");
+		list_link.innerHTML = release_environments[e];
+		list_item.appendChild(list_link);
+		btn_data.appendChild(list_item);
+	}
 
-// 	if (node != undefined) {
-// 	  	if (node.hasChildNodes()) {
-// 			node.removeChild(node.childNodes[0]);
-// 		}
-// 	}
-
-//   	if (node == undefined){
-//   		console.log("creating releases node");
-//   		node = document.createElement('ul');
-//   		node.setAttribute('id', 'releases');
-//   		// node.id = 'releases';
-//   		node.setAttribute('class', 'collapsible popout');
-//   		node.setAttribute('data-collapsible', 'accordion');
-
-//   		document.getElementById('small').appendChild(node);
-//   	}
-
-
-//   	for (r in msg.data) {
-
-//   		var release = msg.data[r];
-//   		console.log("release r: " + r);
-
-// 	  	var existing = document.getElementById(release.id);
-
-// 	  	if (existing == undefined) {
-// 			listitem = document.createElement('li');
-// 			// listitem.setAttribute('id', release.id + "-item");
-			
-// 			header = document.createElement('div');
-// 			// set a id for the header
-
-// 			if (r == last_item) {
-// 				console.log("setting " + r + " to active ");
-// 				header.setAttribute('class', 'collapsible-header active');
-// 				$('.collapsible').collapsible({
-// 					accordion : true
-// 				});
-// 			} else {
-// 				header.setAttribute('class', 'collapsible-header');
-// 			}
-			
-// 			icon = document.createElement('i');
-// 			icon.setAttribute('class', 'mdi-social-whatshot');
-// 			header.appendChild(icon);
-// 			var title = document.createElement('p');
-// 			title.innerHTML = release.id
-// 			header.appendChild(title);
-
-// 			card = document.createElement('div');
-// 			card.setAttribute('class', 'collapsible-body');
-// 			card.setAttribute('id', release.id);
-// 			card.innerHTML = "<p>" + release.status + "</p>";
-
-// 			listitem.appendChild(header);
-// 			listitem.appendChild(card);
-
-// 			node.appendChild(listitem);
-// 	  	} else {
-// 	  		existing.innerHTML="<p>" + release.status + "</p>";
-// 	  	}
-
-//   	}
-
-//   	// sort the list
-//   	sortUnorderedList('releases');
+	nav.appendChild(btn_data);
 
 
-// }
+
+
+
+});
