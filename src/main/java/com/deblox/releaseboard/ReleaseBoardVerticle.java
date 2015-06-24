@@ -225,7 +225,11 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
 
     vertx.fileSystem().exists(stateFile, te -> {
       if (te.succeeded()) {
-        vertx.fileSystem().deleteBlocking(stateFile);
+        try {
+          vertx.fileSystem().deleteBlocking(stateFile);
+        } catch (Exception e) {
+          logger.warn("unable to delete old state file");
+        }
         vertx.fileSystem().createFileBlocking(stateFile);
       } else {
         vertx.fileSystem().createFileBlocking(stateFile);
@@ -242,9 +246,6 @@ public class ReleaseBoardVerticle extends AbstractVerticle {
       });
 
     });
-
-
-
 
   }
 

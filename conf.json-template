@@ -4,7 +4,6 @@
   "services": ["com.deblox.solacemonitor.MonitorVerticle", "com.deblox.server.Server", "com.deblox.releaseboard.ReleaseBoardVerticle"],
   "com.deblox.solacemonitor.MonitorVerticle": {
     "config": {
-      "version": "v1.2.6",
       "host": "solace",
       "username": "read_only_user",
       "password": "password",

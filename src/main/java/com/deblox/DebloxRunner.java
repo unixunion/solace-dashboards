@@ -53,6 +53,8 @@ public class DebloxRunner {
     DebloxRunner.run(scriptDir, scriptDir + "/" + file.getName(), clustered);
   }
 
+  
+
 //  public static void runScript(String prefix, String scriptName, VertxOptions options) {
 //    File file = new File(scriptName);
 //    String dirPart = file.getParent();

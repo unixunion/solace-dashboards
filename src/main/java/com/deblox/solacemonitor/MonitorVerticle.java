@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
  */
 public class MonitorVerticle extends AbstractVerticle {
 
+  String server_version = "v1.2.8";
   private static final Logger logger = LoggerFactory.getLogger(MonitorVerticle.class);
   EventBus eb;
   String uuid;
@@ -230,7 +231,13 @@ public class MonitorVerticle extends AbstractVerticle {
 
     // after 10 seconds, announce the server version to all clients
     vertx.setTimer(10000, tid -> {
-      broadcast("broadcast", "Server Startup " + config.getString("version", "unknown"));
+      broadcast("broadcast", "Server Startup " + config.getString("version", server_version));
+    });
+
+
+    // after 10 seconds, announce the server version to all clients
+    vertx.setPeriodic(1000, tping -> {
+      eb.publish("ping", new JsonObject().put("data", "ping"));
     });
 
 

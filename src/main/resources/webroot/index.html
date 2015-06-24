@@ -18,7 +18,7 @@
     var ismobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 
     // client version to announce to server
-    var client_version = "v1.2.6";
+    var client_version = "v1.2.8";
     var charts = []; // overview charts object
     var chartCount = 0; // chart count
     var dataLength = 40; // default graph length
@@ -37,6 +37,7 @@
     var min_spool_plot = 100; // minimun number of message required to make the queues graph in Overview
     var hide_counter_first_sample = true; // for "counters", hide the initial spike when refreshing view.
     var chart_type = "stackedColumn"; // the chart_type to use ( canvasjs )
+    var show_terms = false;
 
     // what chart type divs exist in body, these are referenced by config
     var chart_divs = [
@@ -189,10 +190,15 @@
     <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
 
-        var t = getCookie("agreeterms");
+        if (show_terms) {
+            var t = getCookie("agreeterms");
+        } else {
+            var t = !show_terms;
+        }
+
         console.log("terms: " + t);
 
-        if (!t) {
+        if (!t ) {
             $('#termsandconditions').leanModal({
                 dismisable: true,
                 opacity: 10,
@@ -211,14 +217,14 @@
             "#22aa99", "#999999", "#705770", "#109618", "#a32929"
         ]);
 
-        charts.push(new ZChart("Message Rate", dataLength, "big", chart_type, chart_interval));
+        charts.push(new ZChart("Message Rate", dataLength, "small-1", chart_type, chart_interval));
         charts[0].chart.options.data = []; // reset chart 0 first element overriding defaults
 
-        charts.push(new ZChart("Discard Delta", 10, "small", chart_type, chart_interval));
+        charts.push(new ZChart("Discard Delta", 10, "small-2", chart_type, chart_interval));
         charts[1].counter = true; // set counter style for Errors
         charts[1].chart.options.data = [];
 
-        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "big", chart_type), chart_interval);
+        charts.push(new ZChart("Queues >" + min_spool_plot + " msgs Spooled", dataLength, "small-2", chart_type), chart_interval);
         charts[2].chart.options.data = []; // reset chart 0 first element overriding defaults
 
         // connect to eventbus

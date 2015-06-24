@@ -57,8 +57,8 @@ var release_data = [];
 // the filter to match and only show releases for
 release_filter_string = "prod"
 var release_filter = new RegExp(release_filter_string,"gi");
-var expire_releases = 10800000; // 3 hours millis 
-var placementDiv = "small"; // the div to place in
+var expire_releases = 10800000*4; // 12 hours millis
+var placementDiv = "small-3"; // the div to place in
 
 var set_release_filter = function(msg) {
 	app_status("Changing release filter to " + msg);
@@ -89,6 +89,7 @@ function hasExpired(dateString) {
 	var then = new Date(dateString);
 	var now = new Date();
 	var timeDiff = Math.abs(now.getTime() - then.getTime());
+	console.log(timeDiff);
 	if (timeDiff > expire_releases) {
 		return true;
 	}
@@ -240,8 +241,8 @@ var get_icon_class = function(code) {
 		return "mdi-action-assignment";
 	}
 
-	// releae complete
-	if (code == 207) {
+	// release complete OR closed release jira
+	if (code == 207 || code == 204) {
 		return "mdi-action-done-all"
 	}
 
