@@ -1,3 +1,5 @@
+# SUPERSEEDED BY https://github.com/unixunion/solace-metrics-gatherer
+
 # solace dashboards
 
 realtime metrics dashboards for Solace Messaging Appliances
