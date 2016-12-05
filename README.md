@@ -1,4 +1,6 @@
-# SUPERSEEDED BY https://github.com/unixunion/solace-metrics-gatherer
+# SUPERSEEDED BY
+
+https://github.com/unixunion/solace-metrics-to-influxdb
 
 # solace dashboards
 
